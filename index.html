@@ -339,11 +339,74 @@
     .notes-save:hover { background: #162d4a; }
     .notes-payroll-only { /* shown only when role=Payroll */ }
     .notes-readonly-msg { font-size: 12px; color: #bbb; }
+
+    /* ─── Note icon button ─── */
+    .note-btn {
+      background: none; border: 1.5px solid #d0d0d0; border-radius: 4px;
+      padding: 3px 7px; cursor: pointer; font-size: 14px; color: #bbb; line-height: 1;
+      vertical-align: middle; margin-left: 6px;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .note-btn:hover { border-color: #1e3a5f; color: #1e3a5f; }
+    .note-btn.has-notes { border-color: #1e3a5f; color: #1e3a5f; background: #e8f0fa; }
+
+    /* ─── Note modal ─── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 1000;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: white; border-radius: 8px; width: 480px; max-width: 94vw;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 80vh;
+    }
+    .modal-header {
+      padding: 18px 22px 14px; border-bottom: 1px solid #e0e0e0;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .modal-title { font-size: 16px; font-weight: 600; color: #1e3a5f; }
+    .modal-close {
+      background: none; border: none; font-size: 18px; cursor: pointer;
+      color: #999; line-height: 1; padding: 2px 6px; border-radius: 4px;
+    }
+    .modal-close:hover { background: #f0f0f0; color: #333; }
+    .modal-body { padding: 18px 22px 22px; overflow-y: auto; }
+    .modal-notes-log {
+      font-size: 13px; color: #444; line-height: 1.7; white-space: pre-wrap;
+      background: #f7f9fc; border-radius: 4px; padding: 10px 12px; margin-bottom: 14px;
+      border: 1px solid #e8e8e8;
+    }
+    .modal-no-notes { font-size: 13px; color: #bbb; margin-bottom: 14px; }
+    .modal-textarea {
+      width: 100%; padding: 8px 10px; border: 1px solid #d0d0d0; border-radius: 4px;
+      font-size: 13px; font-family: inherit; resize: vertical; min-height: 72px;
+      outline: none; box-sizing: border-box;
+    }
+    .modal-textarea:focus { border-color: #1e3a5f; }
+    .modal-save {
+      margin-top: 8px; padding: 7px 22px; background: #1e3a5f; color: white;
+      border: none; border-radius: 4px; font-size: 13px; cursor: pointer;
+      font-weight: 500; font-family: inherit;
+    }
+    .modal-save:hover { background: #162d4a; }
+    .modal-readonly-msg { font-size: 12px; color: #bbb; }
   </style>
 </head>
 <body>
 
 <div id="toast"></div>
+
+<!-- ── Note Modal ── -->
+<div id="noteModal" class="modal-overlay" onclick="closeNoteModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Payroll Notes</span>
+      <button class="modal-close" onclick="closeNoteModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════
      SCREEN 1 — HOME
@@ -694,7 +757,7 @@ const transferRequests = [
     status: 'Submitted',
     submittedBy: 'michael.torres@nw-its.com', submittedDate: '2026-04-28',
     hrCompletedDate: null, notificationSentDate: null,
-    followUpComplete: false, adminNotes: '',
+    followUpComplete: false, adminNotes: '', payrollNotes: '',
   },
   {
     id: 'TR-002',
@@ -715,6 +778,7 @@ const transferRequests = [
     hrCompletedDate: '2026-04-22', notificationSentDate: '2026-04-22',
     followUpComplete: true,
     adminNotes: '[2026-04-23 · finance@nw-its.com] Unanet updated. Effective 5/15 confirmed.\n[2026-04-24 · finance@nw-its.com] IT confirmed Entra update complete.',
+    payrollNotes: '[2026-04-23 · payroll@nw-its.com] BUD verified with James Whitfield. Salary effective 5/15 confirmed.',
   },
   {
     id: 'TR-003',
@@ -731,7 +795,7 @@ const transferRequests = [
     status: 'Submitted',
     submittedBy: 'rachel.kim@nw-its.com', submittedDate: '2026-05-01',
     hrCompletedDate: null, notificationSentDate: null,
-    followUpComplete: false, adminNotes: '',
+    followUpComplete: false, adminNotes: '', payrollNotes: '',
   },
   {
     id: 'TR-004',
@@ -750,7 +814,7 @@ const transferRequests = [
     status: 'Declined',
     submittedBy: 'tom.harris@nw-its.com', submittedDate: '2026-04-15',
     hrCompletedDate: null, notificationSentDate: null,
-    followUpComplete: false, adminNotes: '',
+    followUpComplete: false, adminNotes: '', payrollNotes: '',
   },
 ];
 
@@ -1137,9 +1201,11 @@ function renderAdmin() {
         <td>${r.contractDept}</td>
         <td>${statusBadge(r.status)}</td>
         <td>${fmtDate(r.submittedDate)}</td>
-        <td onclick="event.stopPropagation()">
+        <td onclick="event.stopPropagation()" style="white-space:nowrap;">
           <input type="checkbox" class="fu-toggle" ${r.followUpComplete ? 'checked' : ''}
             onchange="toggleFollowUp('${r.id}', this.checked)" title="Mark follow-up complete">
+          <button class="note-btn ${r.payrollNotes ? 'has-notes' : ''}"
+            onclick="openNoteModal('${r.id}')" title="Payroll notes">📝</button>
         </td>
       </tr>
       <tr class="detail-row ${open ? 'open' : ''}">
@@ -1185,6 +1251,48 @@ function saveNote(id) {
   const ts = '[2026-05-05 · finance@nw-its.com]';
   r.adminNotes = r.adminNotes ? r.adminNotes + '\n' + ts + ' ' + text : ts + ' ' + text;
   showToast('Note saved.', 'success');
+  renderAdmin();
+}
+
+// ════════════════════════════════════════════
+//  NOTE MODAL (Payroll notes)
+// ════════════════════════════════════════════
+function openNoteModal(id) {
+  const r = getById(id);
+  if (!r) return;
+  const role = document.getElementById('adminRoleSelect')?.value || 'HR';
+  const canEdit = role === 'Payroll';
+
+  document.getElementById('modalTitle').textContent = `Payroll Notes — ${r.id}`;
+
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    ${r.payrollNotes
+      ? `<div class="modal-notes-log">${r.payrollNotes}</div>`
+      : `<div class="modal-no-notes">No notes yet.</div>`}
+    ${canEdit ? `
+      <textarea class="modal-textarea" id="modalNoteInput" placeholder="Add a note..."></textarea>
+      <br><button class="modal-save" onclick="savePayrollNote('${r.id}')">Save Note</button>
+    ` : `<div class="modal-readonly-msg">Notes can be added by Payroll only.</div>`}
+  `;
+
+  document.getElementById('noteModal').classList.add('open');
+}
+
+function closeNoteModal() {
+  document.getElementById('noteModal').classList.remove('open');
+}
+
+function savePayrollNote(id) {
+  const r = getById(id);
+  const input = document.getElementById('modalNoteInput');
+  if (!r || !input) return;
+  const text = input.value.trim();
+  if (!text) { showToast('Note is empty.', 'error'); return; }
+  const ts = '[2026-05-05 · payroll@nw-its.com]';
+  r.payrollNotes = r.payrollNotes ? r.payrollNotes + '\n' + ts + ' ' + text : ts + ' ' + text;
+  showToast('Note saved.', 'success');
+  closeNoteModal();
   renderAdmin();
 }
 
