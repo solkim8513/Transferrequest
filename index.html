@@ -1,0 +1,1180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIS Transfer Request POC</title>
+  <style>
+    /* ─── Reset ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+    /* ─── Screen system ─── */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: block; }
+    #screen-home.active { display: flex; }
+    #screen-hr-queue.active,
+    #screen-hr-review.active,
+    #screen-admin.active { display: flex; flex-direction: column; }
+
+    /* ─── Toast ─── */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(40px);
+      background: #1e3a5f; color: #fff; padding: 12px 24px; border-radius: 6px;
+      font-size: 14px; opacity: 0; transition: all 0.25s ease; z-index: 9999;
+      white-space: nowrap; pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.toast-success { background: #107c41; }
+    #toast.toast-error   { background: #c0392b; }
+
+    /* ─── Status badges ─── */
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 12px;
+      font-size: 12px; font-weight: 600; white-space: nowrap;
+    }
+    .badge-submitted    { background: #e3f2fd; color: #1565c0; }
+    .badge-completed    { background: #e8f5e9; color: #2e7d32; }
+    .badge-declined     { background: #fce4ec; color: #c62828; }
+    .badge-hr-completed { background: #fff3e0; color: #e65100; }
+
+    /* ══════════════════════════════════════
+       HOME SCREEN
+    ══════════════════════════════════════ */
+    #screen-home {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2d5986 100%);
+      align-items: center; justify-content: center;
+    }
+    .home-container { text-align: center; color: white; padding: 48px 24px; }
+    .home-eyebrow  { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.6; margin-bottom: 12px; }
+    .home-title    { font-size: 34px; font-weight: 700; margin-bottom: 8px; }
+    .home-subtitle { font-size: 16px; opacity: 0.75; margin-bottom: 48px; }
+    .home-cards    { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+    .portal-card {
+      background: white; color: #1a1a2e; border-radius: 12px; padding: 36px 40px;
+      width: 220px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .portal-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.25); }
+    .portal-card .card-icon  { font-size: 40px; margin-bottom: 14px; }
+    .portal-card .card-title { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+    .portal-card .card-desc  { font-size: 13px; color: #666; line-height: 1.5; }
+    .home-admin-link { color: rgba(255,255,255,0.55); font-size: 13px; cursor: pointer; text-decoration: underline; }
+    .home-admin-link:hover { color: rgba(255,255,255,0.9); }
+    .home-poc-note { margin-top: 20px; font-size: 11px; opacity: 0.4; }
+
+    /* ══════════════════════════════════════
+       MS FORMS STYLE (Manager screens)
+    ══════════════════════════════════════ */
+    #screen-manager-form,
+    #screen-manager-confirm { background: #f3f2f1; }
+
+    .forms-topbar {
+      background: #6264a7; color: white; padding: 12px 24px;
+      display: flex; align-items: center; justify-content: space-between; font-size: 14px;
+    }
+    .forms-topbar-brand { font-weight: 600; font-size: 15px; }
+    .forms-topbar-back  { color: rgba(255,255,255,0.8); cursor: pointer; font-size: 13px; }
+    .forms-topbar-back:hover { color: white; text-decoration: underline; }
+
+    .forms-hero { background: #5c5fa3; color: white; padding: 40px 0 28px; }
+    .forms-hero-inner { max-width: 680px; margin: 0 auto; padding: 0 24px; }
+    .forms-hero h1    { font-size: 26px; font-weight: 600; margin-bottom: 8px; }
+    .forms-hero p     { font-size: 14px; opacity: 0.9; line-height: 1.6; }
+    .forms-required-note { font-size: 12px; opacity: 0.75; margin-top: 10px; }
+
+    .forms-body { max-width: 680px; margin: 0 auto; padding: 20px 24px 80px; }
+
+    .form-card {
+      background: white; border-radius: 3px; padding: 28px 32px; margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .form-card:first-child { border-top: 4px solid #6264a7; }
+    .form-section-title {
+      font-size: 16px; font-weight: 600; color: #323130; margin-bottom: 24px;
+      padding-bottom: 10px; border-bottom: 1px solid #edebe9;
+    }
+    .form-field { margin-bottom: 22px; }
+    .form-label { display: block; font-size: 14px; font-weight: 600; color: #323130; margin-bottom: 6px; }
+    .required-star { color: #c0392b; margin-left: 2px; }
+    .form-input {
+      width: 100%; padding: 8px 0; border: none; border-bottom: 2px solid #c8c6c4;
+      background: transparent; font-size: 15px; color: #323130; outline: none;
+      transition: border-color 0.2s; font-family: inherit;
+    }
+    .form-input:focus { border-bottom-color: #6264a7; }
+    .form-input::placeholder { color: #a19f9d; }
+    .form-textarea {
+      width: 100%; padding: 8px; border: 1px solid #c8c6c4; border-radius: 2px;
+      font-size: 15px; color: #323130; outline: none; resize: vertical;
+      min-height: 80px; font-family: inherit; transition: border-color 0.2s;
+    }
+    .form-textarea:focus { border-color: #6264a7; }
+    .form-radio-group, .form-check-group { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+    .form-radio-item, .form-check-item {
+      display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 15px; color: #323130;
+    }
+    .form-radio-item input, .form-check-item input { width: 17px; height: 17px; accent-color: #6264a7; cursor: pointer; }
+    .form-hint { font-size: 12px; color: #a19f9d; margin-top: 5px; }
+    .form-hint.calc { color: #107c41; font-weight: 500; }
+    .form-conditional { display: none; margin-top: 16px; padding: 16px; background: #faf9f8; border-radius: 3px; border-left: 3px solid #6264a7; }
+    .form-conditional.visible { display: block; }
+
+    .forms-submit-bar {
+      background: white; border-top: 1px solid #edebe9; padding: 16px 24px;
+      position: sticky; bottom: 0; text-align: center;
+    }
+    .forms-submit-btn {
+      background: #6264a7; color: white; border: none; padding: 10px 48px;
+      border-radius: 2px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+    }
+    .forms-submit-btn:hover { background: #4f4f8c; }
+
+    /* ─── Manager confirm ─── */
+    .confirm-body { max-width: 680px; margin: 0 auto; padding: 56px 24px; }
+    .confirm-card {
+      background: white; border-radius: 3px; padding: 52px 40px; text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-top: 4px solid #107c41;
+    }
+    .confirm-icon  { font-size: 56px; margin-bottom: 16px; }
+    .confirm-title { font-size: 24px; font-weight: 600; color: #107c41; margin-bottom: 12px; }
+    .confirm-id    { font-size: 14px; color: #605e5c; margin-bottom: 8px; }
+    .confirm-id strong { color: #6264a7; }
+    .confirm-desc  { font-size: 14px; color: #605e5c; line-height: 1.7; margin-bottom: 32px; }
+    .confirm-btn {
+      background: #6264a7; color: white; border: none; padding: 10px 36px;
+      border-radius: 2px; font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    .confirm-btn:hover { background: #4f4f8c; }
+
+    /* ══════════════════════════════════════
+       HR SHELL (Queue + Review)
+    ══════════════════════════════════════ */
+    .hr-app { display: flex; flex: 1; min-height: 0; }
+
+    .hr-sidebar {
+      width: 220px; background: #1e3a5f; color: white; flex-shrink: 0;
+      display: flex; flex-direction: column;
+    }
+    .hr-brand { padding: 22px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .hr-brand-eyebrow { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.55; }
+    .hr-brand-name    { font-size: 16px; font-weight: 700; margin-top: 2px; }
+    .hr-brand-sub     { font-size: 12px; opacity: 0.55; }
+    .hr-nav { padding: 12px 0; flex: 1; }
+    .hr-nav-item {
+      display: block; width: 100%; padding: 10px 20px; background: none; border: none;
+      color: rgba(255,255,255,0.7); font-size: 14px; text-align: left; cursor: pointer;
+      transition: background 0.15s; border-left: 3px solid transparent; font-family: inherit;
+    }
+    .hr-nav-item:hover  { background: rgba(255,255,255,0.07); color: white; }
+    .hr-nav-item.active { background: rgba(255,255,255,0.11); color: white; border-left-color: #4fc3f7; }
+    .hr-sidebar-footer { padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 11px; opacity: 0.4; line-height: 1.5; }
+
+    .hr-main { flex: 1; overflow-y: auto; background: #f0f2f5; display: flex; flex-direction: column; }
+
+    .hr-topbar {
+      background: white; border-bottom: 1px solid #e0e0e0; padding: 16px 28px;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .hr-topbar h1 { font-size: 20px; font-weight: 600; color: #1e3a5f; }
+    .hr-content { padding: 24px; flex: 1; }
+
+    /* ─── Queue filters + table ─── */
+    .queue-filters {
+      background: white; border-radius: 8px; padding: 14px 20px; margin-bottom: 18px;
+      display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .filter-group { display: flex; align-items: center; gap: 8px; }
+    .filter-group label { font-size: 13px; color: #555; font-weight: 500; }
+    .filter-select, .filter-input {
+      padding: 6px 10px; border: 1px solid #d0d0d0; border-radius: 4px;
+      font-size: 13px; color: #333; background: white; outline: none; font-family: inherit;
+    }
+    .filter-select:focus, .filter-input:focus { border-color: #1e3a5f; }
+
+    .queue-table-wrap { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      background: #f8f9fa; padding: 11px 16px; text-align: left;
+      font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase;
+      letter-spacing: 0.5px; border-bottom: 2px solid #e8e8e8; cursor: pointer; user-select: none;
+    }
+    .data-table th:hover { background: #f0f2f5; }
+    .data-table td { padding: 13px 16px; font-size: 14px; border-bottom: 1px solid #f2f2f2; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tbody tr { cursor: pointer; transition: background 0.1s; }
+    .data-table tbody tr:hover { background: #f0f4ff; }
+    .action-link { color: #1e3a5f; font-weight: 600; font-size: 13px; }
+    .empty-state { text-align: center; padding: 48px 24px; color: #aaa; font-size: 14px; }
+
+    /* ─── HR Review ─── */
+    .review-topbar {
+      background: white; border-bottom: 1px solid #e0e0e0; padding: 14px 24px;
+      display: flex; align-items: center; gap: 14px; flex-shrink: 0;
+    }
+    .review-back { color: #1e3a5f; cursor: pointer; font-size: 14px; font-weight: 500; }
+    .review-back:hover { text-decoration: underline; }
+    .review-title { font-size: 17px; font-weight: 600; color: #1e3a5f; }
+    .review-status { margin-left: auto; }
+
+    .review-body { padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .review-panel {
+      background: white; border-radius: 8px; padding: 22px 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .review-panel-title {
+      font-size: 11px; font-weight: 700; color: #1e3a5f; margin-bottom: 18px;
+      padding-bottom: 8px; border-bottom: 2px solid #e3f2fd;
+      text-transform: uppercase; letter-spacing: 0.6px;
+    }
+    .panel-note { font-weight: 400; color: #999; margin-left: 6px; }
+
+    .rf { margin-bottom: 16px; }
+    .rf-label { font-size: 11px; color: #999; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 3px; }
+    .rf-value { font-size: 14px; color: #1a1a2e; }
+    .rf-input {
+      width: 100%; padding: 7px 10px; border: 1px solid #d0d0d0; border-radius: 4px;
+      font-size: 14px; color: #1a1a2e; outline: none; font-family: inherit; transition: border-color 0.2s;
+    }
+    .rf-input:focus { border-color: #1e3a5f; }
+    .rf-textarea {
+      width: 100%; padding: 7px 10px; border: 1px solid #d0d0d0; border-radius: 4px;
+      font-size: 14px; color: #1a1a2e; outline: none; font-family: inherit;
+      resize: vertical; min-height: 68px; transition: border-color 0.2s;
+    }
+    .rf-textarea:focus { border-color: #1e3a5f; }
+
+    .review-actions-row {
+      grid-column: 1 / -1; background: white; border-radius: 8px; padding: 18px 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 14px;
+    }
+    .review-actions-label { font-size: 14px; color: #555; }
+    .btn-approve {
+      background: #107c41; color: white; border: none; padding: 10px 32px;
+      border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-approve:hover { background: #0b5e30; }
+    .btn-decline {
+      background: white; color: #c62828; border: 2px solid #c62828; padding: 10px 32px;
+      border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-decline:hover { background: #fce4ec; }
+    .review-actions-note { font-size: 12px; color: #aaa; margin-left: auto; }
+    .review-done-msg { font-size: 14px; color: #777; }
+
+    .notif-hint {
+      background: #f0f7ff; border: 1px solid #b3d4f5; border-radius: 6px;
+      padding: 12px 14px; font-size: 12px; color: #1e3a5f; line-height: 1.6; margin-top: 16px;
+    }
+
+    /* ══════════════════════════════════════
+       ADMIN SCREEN
+    ══════════════════════════════════════ */
+    .admin-topbar {
+      background: #1e3a5f; color: white; padding: 15px 28px;
+      display: flex; align-items: center; gap: 16px; flex-shrink: 0;
+    }
+    .admin-back { color: rgba(255,255,255,0.65); cursor: pointer; font-size: 14px; }
+    .admin-back:hover { color: white; }
+    .admin-title { font-size: 19px; font-weight: 600; }
+    .admin-role-wrap { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .admin-role-label { font-size: 12px; opacity: 0.6; }
+    .admin-role-select {
+      padding: 6px 12px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1); color: white; font-size: 13px; cursor: pointer; outline: none; font-family: inherit;
+    }
+    .admin-role-select option { background: #1e3a5f; color: white; }
+
+    .admin-body { flex: 1; overflow-y: auto; }
+    .admin-content { padding: 24px; }
+
+    .admin-filters {
+      background: white; border-radius: 8px; padding: 14px 20px; margin-bottom: 18px;
+      display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .admin-search {
+      padding: 7px 12px; border: 1px solid #d0d0d0; border-radius: 4px;
+      font-size: 14px; outline: none; width: 240px; font-family: inherit;
+    }
+    .admin-search:focus { border-color: #1e3a5f; }
+
+    .admin-table-wrap { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; }
+    .admin-table td { vertical-align: middle; }
+
+    /* follow-up toggle */
+    .fu-toggle {
+      appearance: none; width: 36px; height: 20px; background: #ccc;
+      border-radius: 10px; cursor: pointer; position: relative; outline: none; transition: background 0.2s;
+    }
+    .fu-toggle:checked { background: #107c41; }
+    .fu-toggle::after {
+      content: ''; position: absolute; width: 14px; height: 14px; background: white;
+      border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .fu-toggle:checked::after { left: 19px; }
+
+    /* detail expand row */
+    .detail-row { display: none; }
+    .detail-row.open { display: table-row; }
+    .detail-cell { padding: 18px 28px; background: #f7f9fc; border-bottom: 1px solid #e8e8e8; }
+    .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 20px; margin-bottom: 16px; }
+    .dg-label { font-size: 11px; color: #999; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
+    .dg-value { font-size: 13px; color: #333; }
+
+    .notes-section { border-top: 1px solid #e0e0e0; padding-top: 14px; }
+    .notes-title   { font-size: 13px; font-weight: 600; color: #1e3a5f; margin-bottom: 8px; }
+    .notes-log     { font-size: 13px; color: #555; line-height: 1.7; margin-bottom: 10px; white-space: pre-wrap; }
+    .notes-no-log  { font-size: 13px; color: #bbb; margin-bottom: 10px; }
+    .notes-input   {
+      width: 100%; padding: 8px 10px; border: 1px solid #d0d0d0; border-radius: 4px;
+      font-size: 13px; font-family: inherit; resize: vertical; min-height: 56px; outline: none;
+    }
+    .notes-input:focus { border-color: #1e3a5f; }
+    .notes-save {
+      margin-top: 6px; padding: 6px 20px; background: #1e3a5f; color: white;
+      border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: 500; font-family: inherit;
+    }
+    .notes-save:hover { background: #162d4a; }
+    .notes-payroll-only { /* shown only when role=Payroll */ }
+    .notes-readonly-msg { font-size: 12px; color: #bbb; }
+  </style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 1 — HOME
+══════════════════════════════════════════ -->
+<div id="screen-home" class="screen active">
+  <div class="home-container">
+    <p class="home-eyebrow">NIS Internal Systems</p>
+    <h1 class="home-title">Transfer Request</h1>
+    <p class="home-subtitle">Submit and manage employee transfer requests</p>
+    <div class="home-cards">
+      <div class="portal-card" onclick="showScreen('screen-manager-form')">
+        <div class="card-icon">📋</div>
+        <div class="card-title">Manager Portal</div>
+        <div class="card-desc">Submit a new employee transfer request</div>
+      </div>
+      <div class="portal-card" onclick="showScreen('screen-hr-queue')">
+        <div class="card-icon">👔</div>
+        <div class="card-title">HR Portal</div>
+        <div class="card-desc">Review and approve transfer requests</div>
+      </div>
+    </div>
+    <span class="home-admin-link" onclick="navTo('screen-admin')">Admin / Request Hub →</span>
+    <p class="home-poc-note">POC only · Static sample data · Power Apps + SharePoint in production</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 2 — MANAGER FORM
+══════════════════════════════════════════ -->
+<div id="screen-manager-form" class="screen">
+  <div class="forms-topbar">
+    <span class="forms-topbar-brand">NIS &middot; Manager Portal</span>
+    <span class="forms-topbar-back" onclick="showScreen('screen-home')">← Exit</span>
+  </div>
+  <div class="forms-hero">
+    <div class="forms-hero-inner">
+      <h1>Employee Transfer Request</h1>
+      <p>Complete all required fields and submit. HR will review, add employment details, and approve or decline the request.</p>
+      <p class="forms-required-note">Fields marked * are required.</p>
+    </div>
+  </div>
+  <div class="forms-body">
+
+    <!-- Section 1: Employee Info -->
+    <div class="form-card">
+      <div class="form-section-title">Employee Information</div>
+      <div class="form-field">
+        <label class="form-label">Employee First Name <span class="required-star">*</span></label>
+        <input type="text" class="form-input" id="fFirstName" placeholder="Enter first name">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Employee Last Name <span class="required-star">*</span></label>
+        <input type="text" class="form-input" id="fLastName" placeholder="Enter last name">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Effective Transfer Date <span class="required-star">*</span></label>
+        <input type="date" class="form-input" id="fEffDate">
+      </div>
+    </div>
+
+    <!-- Section 2: Transfer Details -->
+    <div class="form-card">
+      <div class="form-section-title">Transfer Details</div>
+      <div class="form-field">
+        <label class="form-label">Contract or Department <span class="required-star">*</span></label>
+        <input type="text" class="form-input" id="fContractDept" placeholder="e.g., USGS Contract, HQ – Administrative Services">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Task Order</label>
+        <input type="text" class="form-input" id="fTaskOrder" placeholder="e.g., TO-2024-007 (optional)">
+      </div>
+      <div class="form-field">
+        <label class="form-label">New Job Title <span class="required-star">*</span></label>
+        <input type="text" class="form-input" id="fJobTitle" placeholder="Enter new job title">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Transfer Type <span class="required-star">*</span></label>
+        <div class="form-radio-group">
+          <label class="form-radio-item">
+            <input type="radio" name="transferType" value="Full-Time Transfer" onchange="onTransferTypeChange()">
+            Full-Time Transfer
+          </label>
+          <label class="form-radio-item">
+            <input type="radio" name="transferType" value="Split Allocation" onchange="onTransferTypeChange()">
+            Split Allocation (employee will work across multiple contracts)
+          </label>
+        </div>
+      </div>
+      <div class="form-conditional" id="splitConditional">
+        <div class="form-field" style="margin-bottom:0;">
+          <label class="form-label">New Contract Allocation % <span class="required-star">*</span></label>
+          <input type="number" class="form-input" id="fNewContractPct" placeholder="e.g., 30" min="1" max="99" oninput="updateHQCalc(this.value)">
+          <p class="form-hint" id="hqCalcHint">HQ allocation is calculated as the remainder (e.g., enter 30 → new contract 30%, HQ 70%).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Equipment & Role -->
+    <div class="form-card">
+      <div class="form-section-title">Equipment &amp; Role</div>
+      <div class="form-field">
+        <label class="form-label">NIS Equipment Needed? <span class="required-star">*</span></label>
+        <div class="form-radio-group">
+          <label class="form-radio-item">
+            <input type="radio" name="nisEquip" value="Yes" onchange="onEquipChange()"> Yes
+          </label>
+          <label class="form-radio-item">
+            <input type="radio" name="nisEquip" value="No" onchange="onEquipChange()"> No
+          </label>
+        </div>
+      </div>
+      <div class="form-conditional" id="equipConditional">
+        <div class="form-field" style="margin-bottom:0;">
+          <label class="form-label">Equipment Details <span class="required-star">*</span></label>
+          <div class="form-check-group">
+            <label class="form-check-item"><input type="checkbox" name="equipType" value="Laptop"> Laptop</label>
+            <label class="form-check-item"><input type="checkbox" name="equipType" value="Phone"> Phone</label>
+            <label class="form-check-item"><input type="checkbox" name="equipType" value="Other"> Other</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Will employee be a Team Lead? <span class="required-star">*</span></label>
+        <div class="form-radio-group">
+          <label class="form-radio-item"><input type="radio" name="teamLead" value="Yes"> Yes</label>
+          <label class="form-radio-item"><input type="radio" name="teamLead" value="No"> No</label>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Will employee have Direct Reports? <span class="required-star">*</span></label>
+        <div class="form-radio-group">
+          <label class="form-radio-item"><input type="radio" name="directReports" value="Yes"> Yes</label>
+          <label class="form-radio-item"><input type="radio" name="directReports" value="No"> No</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Compensation & Comments -->
+    <div class="form-card">
+      <div class="form-section-title">Compensation &amp; Comments</div>
+      <div class="form-field">
+        <label class="form-label">Salary Change</label>
+        <input type="text" class="form-input" id="fSalaryManager" placeholder="Enter proposed amount, or leave blank for HR to determine">
+        <p class="form-hint">Optional. HR will confirm or update this value.</p>
+      </div>
+      <div class="form-field" style="margin-bottom:0;">
+        <label class="form-label">Manager Comments</label>
+        <textarea class="form-textarea" id="fManagerComments" placeholder="Any additional context for HR..."></textarea>
+      </div>
+    </div>
+
+  </div>
+  <div class="forms-submit-bar">
+    <button class="forms-submit-btn" onclick="submitManagerForm()">Submit Request</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 3 — MANAGER CONFIRM
+══════════════════════════════════════════ -->
+<div id="screen-manager-confirm" class="screen">
+  <div class="forms-topbar">
+    <span class="forms-topbar-brand">NIS &middot; Manager Portal</span>
+  </div>
+  <div class="confirm-body">
+    <div class="confirm-card">
+      <div class="confirm-icon">✅</div>
+      <h2 class="confirm-title">Request Submitted</h2>
+      <p class="confirm-id">Request ID: <strong id="newRequestId"></strong></p>
+      <p class="confirm-desc">
+        Your transfer request has been submitted successfully.<br>
+        HR will review the request, add employment details, and approve or decline.<br><br>
+        You will receive an email notification only if the request is declined.
+      </p>
+      <button class="confirm-btn" onclick="showScreen('screen-home')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 4 — HR QUEUE
+══════════════════════════════════════════ -->
+<div id="screen-hr-queue" class="screen">
+  <div class="hr-app">
+    <aside class="hr-sidebar">
+      <div class="hr-brand">
+        <div class="hr-brand-eyebrow">NIS</div>
+        <div class="hr-brand-name">HR Portal</div>
+        <div class="hr-brand-sub">Transfer Requests</div>
+      </div>
+      <nav class="hr-nav">
+        <button class="hr-nav-item active" onclick="showScreen('screen-hr-queue')">Request Queue</button>
+        <button class="hr-nav-item" onclick="navTo('screen-admin')">Admin / Request Hub</button>
+      </nav>
+      <div class="hr-sidebar-footer">POC only<br>Static data &middot; Power Apps in production</div>
+    </aside>
+    <div class="hr-main">
+      <div class="hr-topbar">
+        <h1>Transfer Request Queue</h1>
+        <span style="font-size:13px;color:#888;" id="queueCount"></span>
+      </div>
+      <div class="hr-content">
+        <div class="queue-filters">
+          <div class="filter-group">
+            <label>Search</label>
+            <input type="text" class="filter-input" id="queueSearch" placeholder="Employee name..." oninput="renderQueue()">
+          </div>
+          <div class="filter-group">
+            <label>Status</label>
+            <select class="filter-select" id="queueStatusFilter" onchange="renderQueue()">
+              <option value="all">All statuses</option>
+              <option value="Submitted">Submitted</option>
+              <option value="Completed">Completed</option>
+              <option value="Declined">Declined</option>
+            </select>
+          </div>
+        </div>
+        <div class="queue-table-wrap">
+          <table class="data-table" id="queueTable">
+            <thead>
+              <tr>
+                <th onclick="sortQueue('id')">ID</th>
+                <th onclick="sortQueue('empLastName')">Employee</th>
+                <th onclick="sortQueue('effectiveDate')">Effective Date</th>
+                <th onclick="sortQueue('contractDept')">Contract / Dept</th>
+                <th onclick="sortQueue('status')">Status</th>
+                <th onclick="sortQueue('submittedDate')">Submitted</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="queueTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 5 — HR REVIEW
+══════════════════════════════════════════ -->
+<div id="screen-hr-review" class="screen">
+  <div class="hr-app">
+    <aside class="hr-sidebar">
+      <div class="hr-brand">
+        <div class="hr-brand-eyebrow">NIS</div>
+        <div class="hr-brand-name">HR Portal</div>
+        <div class="hr-brand-sub">Transfer Requests</div>
+      </div>
+      <nav class="hr-nav">
+        <button class="hr-nav-item" onclick="showScreen('screen-hr-queue')">Request Queue</button>
+        <button class="hr-nav-item" onclick="navTo('screen-admin')">Admin / Request Hub</button>
+      </nav>
+      <div class="hr-sidebar-footer">POC only<br>Static data &middot; Power Apps in production</div>
+    </aside>
+    <div class="hr-main" id="hrReviewMain"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 6 — ADMIN / REQUEST HUB
+══════════════════════════════════════════ -->
+<div id="screen-admin" class="screen">
+  <div class="admin-topbar">
+    <span class="admin-back" onclick="goBack()">← Back</span>
+    <span class="admin-title">Request Hub &mdash; Admin Screen</span>
+    <div class="admin-role-wrap">
+      <span class="admin-role-label">Viewing as:</span>
+      <select class="admin-role-select" id="adminRoleSelect" onchange="renderAdmin()">
+        <option value="HR">HR</option>
+        <option value="Finance">Finance</option>
+        <option value="Payroll">Payroll</option>
+      </select>
+    </div>
+  </div>
+  <div class="admin-body">
+    <div class="admin-content">
+      <div class="admin-filters">
+        <input type="text" class="admin-search" id="adminSearch" placeholder="Search employee name or contract..." oninput="renderAdmin()">
+        <div class="filter-group">
+          <label>Status</label>
+          <select class="filter-select" id="adminStatusFilter" onchange="renderAdmin()">
+            <option value="all">All statuses</option>
+            <option value="Submitted">Submitted</option>
+            <option value="Completed">Completed</option>
+            <option value="Declined">Declined</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Follow-Up</label>
+          <select class="filter-select" id="adminFollowUpFilter" onchange="renderAdmin()">
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="done">Complete</option>
+          </select>
+        </div>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="data-table admin-table" id="adminTable">
+          <thead>
+            <tr>
+              <th onclick="sortAdmin('id')">ID</th>
+              <th onclick="sortAdmin('empLastName')">Employee</th>
+              <th onclick="sortAdmin('effectiveDate')">Effective Date</th>
+              <th onclick="sortAdmin('contractDept')">Contract / Dept</th>
+              <th onclick="sortAdmin('status')">Status</th>
+              <th onclick="sortAdmin('submittedDate')">Submitted</th>
+              <th>Follow-Up</th>
+            </tr>
+          </thead>
+          <tbody id="adminTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+//  SAMPLE DATA
+// ════════════════════════════════════════════
+const transferRequests = [
+  {
+    id: 'TR-001',
+    empFirstName: 'John',   empLastName: 'Smith',
+    effectiveDate: '2026-06-01',
+    contractDept: 'USGS Contract',  taskOrder: 'TO-2024-007',
+    newJobTitle: 'Senior Systems Analyst',
+    transferType: 'Split Allocation', newContractPct: 60, hqPct: 40,
+    nisEquipment: true,  equipmentDetails: 'Laptop, Phone',
+    isTeamLead: false, hasDirectReports: false,
+    salaryChangeManager: '$95,000',
+    managerComments: 'John has been specifically requested by the USGS PM. Transition is expected to be smooth.',
+    employeeId: '', newBUD: '', laborCategory: '', salaryChangeHR: '', hrNotes: '',
+    status: 'Submitted',
+    submittedBy: 'michael.torres@nw-its.com', submittedDate: '2026-04-28',
+    hrCompletedDate: null, notificationSentDate: null,
+    followUpComplete: false, adminNotes: '',
+  },
+  {
+    id: 'TR-002',
+    empFirstName: 'Maria',  empLastName: 'Garcia',
+    effectiveDate: '2026-05-15',
+    contractDept: 'HQ – Administrative Services', taskOrder: '',
+    newJobTitle: 'Program Coordinator',
+    transferType: 'Full-Time Transfer', newContractPct: null, hqPct: null,
+    nisEquipment: false, equipmentDetails: '',
+    isTeamLead: true, hasDirectReports: true,
+    salaryChangeManager: '',
+    managerComments: '',
+    employeeId: 'EMP-4421', newBUD: 'James Whitfield',
+    laborCategory: 'Administrative III', salaryChangeHR: '$72,500',
+    hrNotes: 'Approved. Offer letter sent 4/22.',
+    status: 'Completed',
+    submittedBy: 'linda.chen@nw-its.com', submittedDate: '2026-04-20',
+    hrCompletedDate: '2026-04-22', notificationSentDate: '2026-04-22',
+    followUpComplete: true,
+    adminNotes: '[2026-04-23 · payroll@nw-its.com] Unanet updated. Effective 5/15 confirmed.\n[2026-04-24 · payroll@nw-its.com] IT confirmed Entra update complete.',
+  },
+  {
+    id: 'TR-003',
+    empFirstName: 'David',  empLastName: 'Lee',
+    effectiveDate: '2026-06-15',
+    contractDept: 'EPA Contract', taskOrder: 'TO-2025-003',
+    newJobTitle: 'IT Specialist',
+    transferType: 'Full-Time Transfer', newContractPct: null, hqPct: null,
+    nisEquipment: true, equipmentDetails: 'Laptop',
+    isTeamLead: false, hasDirectReports: false,
+    salaryChangeManager: 'No change',
+    managerComments: 'Backfilling existing IT slot on EPA. No salary change expected.',
+    employeeId: '', newBUD: '', laborCategory: '', salaryChangeHR: '', hrNotes: '',
+    status: 'Submitted',
+    submittedBy: 'rachel.kim@nw-its.com', submittedDate: '2026-05-01',
+    hrCompletedDate: null, notificationSentDate: null,
+    followUpComplete: false, adminNotes: '',
+  },
+  {
+    id: 'TR-004',
+    empFirstName: 'Angela', empLastName: 'Brown',
+    effectiveDate: '2026-05-01',
+    contractDept: 'NPS Contract', taskOrder: '',
+    newJobTitle: 'Project Manager',
+    transferType: 'Full-Time Transfer', newContractPct: null, hqPct: null,
+    nisEquipment: false, equipmentDetails: '',
+    isTeamLead: true, hasDirectReports: true,
+    salaryChangeManager: '$105,000',
+    managerComments: 'Urgent – PM role must be filled by May 1.',
+    employeeId: 'EMP-3812', newBUD: '',
+    laborCategory: 'Program Management II', salaryChangeHR: '',
+    hrNotes: 'BUD information missing. Cannot approve without it. Please resubmit with correct BUD.',
+    status: 'Declined',
+    submittedBy: 'tom.harris@nw-its.com', submittedDate: '2026-04-15',
+    hrCompletedDate: null, notificationSentDate: null,
+    followUpComplete: false, adminNotes: '',
+  },
+];
+
+let nextId = 5;
+let currentReviewId = null;
+let previousScreen = 'screen-home';
+let queueSortKey = 'submittedDate'; let queueSortDir = 'desc';
+let adminSortKey = 'submittedDate'; let adminSortDir = 'desc';
+let openAdminRows = new Set();
+
+// ════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+  if (id === 'screen-hr-queue') renderQueue();
+}
+
+function navTo(id) {
+  previousScreen = document.querySelector('.screen.active')?.id || 'screen-home';
+  showScreen(id);
+  if (id === 'screen-admin') renderAdmin();
+}
+
+function goBack() {
+  showScreen(previousScreen);
+  if (previousScreen === 'screen-hr-queue') renderQueue();
+  if (previousScreen === 'screen-admin') renderAdmin();
+}
+
+// ════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (type ? ' toast-' + type : '');
+  setTimeout(() => { t.className = ''; }, 3400);
+}
+
+// ════════════════════════════════════════════
+//  UTILITIES
+// ════════════════════════════════════════════
+function getById(id) { return transferRequests.find(r => r.id === id); }
+
+function statusBadge(s) {
+  const cls = { 'Submitted': 'badge-submitted', 'Completed': 'badge-completed', 'Declined': 'badge-declined', 'HR Completed': 'badge-hr-completed' };
+  return `<span class="badge ${cls[s] || ''}">${s}</span>`;
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-');
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1] + ' ' + +day + ', ' + y;
+}
+
+function radio(name) { return document.querySelector(`input[name="${name}"]:checked`)?.value || ''; }
+
+// ════════════════════════════════════════════
+//  MANAGER FORM
+// ════════════════════════════════════════════
+function onTransferTypeChange() {
+  const v = radio('transferType');
+  document.getElementById('splitConditional').classList.toggle('visible', v === 'Split Allocation');
+}
+
+function onEquipChange() {
+  const v = radio('nisEquip');
+  document.getElementById('equipConditional').classList.toggle('visible', v === 'Yes');
+}
+
+function updateHQCalc(val) {
+  const pct = parseInt(val);
+  const hint = document.getElementById('hqCalcHint');
+  if (pct >= 1 && pct <= 99) {
+    hint.textContent = `New contract: ${pct}% — HQ: ${100 - pct}%`;
+    hint.className = 'form-hint calc';
+  } else {
+    hint.textContent = 'HQ allocation is calculated as the remainder (e.g., enter 30 → new contract 30%, HQ 70%).';
+    hint.className = 'form-hint';
+  }
+}
+
+function submitManagerForm() {
+  const firstName    = document.getElementById('fFirstName').value.trim();
+  const lastName     = document.getElementById('fLastName').value.trim();
+  const effDate      = document.getElementById('fEffDate').value;
+  const contractDept = document.getElementById('fContractDept').value.trim();
+  const jobTitle     = document.getElementById('fJobTitle').value.trim();
+  const transferType = radio('transferType');
+  const nisEquip     = radio('nisEquip');
+  const teamLead     = radio('teamLead');
+  const directRep    = radio('directReports');
+
+  if (!firstName || !lastName || !effDate || !contractDept || !jobTitle || !transferType || !nisEquip || !teamLead || !directRep) {
+    showToast('Please complete all required fields.', 'error'); return;
+  }
+  let newContractPct = null, hqPct = null;
+  if (transferType === 'Split Allocation') {
+    const pct = parseInt(document.getElementById('fNewContractPct').value);
+    if (!pct || pct < 1 || pct > 99) { showToast('Enter a valid allocation % (1–99).', 'error'); return; }
+    newContractPct = pct; hqPct = 100 - pct;
+  }
+  if (nisEquip === 'Yes' && !document.querySelector('input[name="equipType"]:checked')) {
+    showToast('Please select at least one equipment type.', 'error'); return;
+  }
+
+  const equip = [...document.querySelectorAll('input[name="equipType"]:checked')].map(e => e.value).join(', ');
+  const newId = `TR-00${nextId++}`;
+  transferRequests.push({
+    id: newId,
+    empFirstName: firstName, empLastName: lastName, effectiveDate: effDate,
+    contractDept, taskOrder: document.getElementById('fTaskOrder').value.trim(),
+    newJobTitle: jobTitle, transferType, newContractPct, hqPct,
+    nisEquipment: nisEquip === 'Yes', equipmentDetails: equip,
+    isTeamLead: teamLead === 'Yes', hasDirectReports: directRep === 'Yes',
+    salaryChangeManager: document.getElementById('fSalaryManager').value.trim(),
+    managerComments: document.getElementById('fManagerComments').value.trim(),
+    employeeId: '', newBUD: '', laborCategory: '', salaryChangeHR: '', hrNotes: '',
+    status: 'Submitted', submittedBy: 'manager@nw-its.com', submittedDate: '2026-05-05',
+    hrCompletedDate: null, notificationSentDate: null, followUpComplete: false, adminNotes: '',
+  });
+
+  document.getElementById('newRequestId').textContent = newId;
+
+  // Reset form
+  ['fFirstName','fLastName','fEffDate','fContractDept','fTaskOrder','fJobTitle','fNewContractPct','fSalaryManager','fManagerComments']
+    .forEach(id => { document.getElementById(id).value = ''; });
+  document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+  document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+  document.getElementById('splitConditional').classList.remove('visible');
+  document.getElementById('equipConditional').classList.remove('visible');
+  document.getElementById('hqCalcHint').textContent = 'HQ allocation is calculated as the remainder (e.g., enter 30 → new contract 30%, HQ 70%).';
+  document.getElementById('hqCalcHint').className = 'form-hint';
+
+  showScreen('screen-manager-confirm');
+}
+
+// ════════════════════════════════════════════
+//  HR QUEUE
+// ════════════════════════════════════════════
+function sortQueue(key) {
+  queueSortDir = (queueSortKey === key && queueSortDir === 'asc') ? 'desc' : 'asc';
+  queueSortKey = key;
+  renderQueue();
+}
+
+function renderQueue() {
+  const search = (document.getElementById('queueSearch')?.value || '').toLowerCase();
+  const sf     = document.getElementById('queueStatusFilter')?.value || 'all';
+
+  let rows = transferRequests.filter(r => {
+    const ms = !search || (r.empFirstName + ' ' + r.empLastName).toLowerCase().includes(search);
+    const ss = sf === 'all' || r.status === sf;
+    return ms && ss;
+  }).sort((a, b) => {
+    const av = a[queueSortKey] || '', bv = b[queueSortKey] || '';
+    return av < bv ? (queueSortDir === 'asc' ? -1 : 1) : av > bv ? (queueSortDir === 'asc' ? 1 : -1) : 0;
+  });
+
+  const el = document.getElementById('queueCount');
+  if (el) el.textContent = `${rows.length} record${rows.length !== 1 ? 's' : ''}`;
+
+  const tbody = document.getElementById('queueTbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = rows.length === 0
+    ? `<tr><td colspan="7"><div class="empty-state">No requests match your filters.</div></td></tr>`
+    : rows.map(r => `
+      <tr onclick="openReview('${r.id}')">
+        <td style="font-weight:600;color:#1e3a5f;">${r.id}</td>
+        <td>${r.empLastName}, ${r.empFirstName}</td>
+        <td>${fmtDate(r.effectiveDate)}</td>
+        <td>${r.contractDept}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td>${fmtDate(r.submittedDate)}</td>
+        <td class="action-link">${r.status === 'Submitted' ? 'Review →' : 'View →'}</td>
+      </tr>`).join('');
+}
+
+// ════════════════════════════════════════════
+//  HR REVIEW
+// ════════════════════════════════════════════
+function openReview(id) {
+  currentReviewId = id;
+  previousScreen = 'screen-hr-queue';
+  showScreen('screen-hr-review');
+  renderReview();
+}
+
+function renderReview() {
+  const r = getById(currentReviewId);
+  if (!r) return;
+  const editable = r.status === 'Submitted';
+  const alloc = r.transferType === 'Split Allocation'
+    ? `${r.newContractPct}% new contract / ${r.hqPct}% HQ`
+    : 'Full-Time Transfer';
+
+  function roField(label, val) {
+    return `<div class="rf"><div class="rf-label">${label}</div><div class="rf-value">${val || '—'}</div></div>`;
+  }
+  function rwField(label, val, inputId, placeholder) {
+    return editable
+      ? `<div class="rf"><div class="rf-label">${label}</div><input type="text" class="rf-input" id="${inputId}" value="${(val||'').replace(/"/g,'&quot;')}" placeholder="${placeholder||''}"></div>`
+      : roField(label, val);
+  }
+  function rwTextarea(label, val, inputId, placeholder) {
+    return editable
+      ? `<div class="rf"><div class="rf-label">${label}</div><textarea class="rf-textarea" id="${inputId}" placeholder="${placeholder||''}">${val||''}</textarea></div>`
+      : `<div class="rf"><div class="rf-label">${label}</div><div class="rf-value" style="white-space:pre-wrap;">${val||'—'}</div></div>`;
+  }
+
+  const main = document.getElementById('hrReviewMain');
+  main.innerHTML = `
+    <div class="review-topbar">
+      <span class="review-back" onclick="showScreen('screen-hr-queue')">← Back to Queue</span>
+      <span class="review-title">${r.id} — ${r.empLastName}, ${r.empFirstName}</span>
+      <span class="review-status">${statusBadge(r.status)}</span>
+    </div>
+    <div class="review-body">
+
+      <!-- Left panel: Manager submission -->
+      <div class="review-panel">
+        <div class="review-panel-title">Manager Submission<span class="panel-note">${editable ? 'HR may override any field' : 'read-only'}</span></div>
+        ${rwField('Employee First Name', r.empFirstName, 'rFirstName')}
+        ${rwField('Employee Last Name',  r.empLastName,  'rLastName')}
+        ${roField('Effective Date',      fmtDate(r.effectiveDate))}
+        ${rwField('Contract / Department', r.contractDept, 'rContractDept')}
+        ${rwField('Task Order', r.taskOrder, 'rTaskOrder', 'N/A if none')}
+        ${rwField('New Job Title', r.newJobTitle, 'rJobTitle')}
+        ${roField('Transfer Type', r.transferType)}
+        ${roField('Allocation', alloc)}
+        ${roField('NIS Equipment', r.nisEquipment ? 'Yes' : 'No')}
+        ${r.nisEquipment ? roField('Equipment Details', r.equipmentDetails) : ''}
+        ${roField('Team Lead', r.isTeamLead ? 'Yes' : 'No')}
+        ${roField('Direct Reports', r.hasDirectReports ? 'Yes' : 'No')}
+        ${rwField('Salary (Manager)', r.salaryChangeManager, 'rSalaryMgr', 'enter if known')}
+        ${rwTextarea('Manager Comments', r.managerComments, 'rManagerComments')}
+      </div>
+
+      <!-- Right panel: HR fields -->
+      <div class="review-panel">
+        <div class="review-panel-title">HR Review</div>
+        ${editable ? `
+          <div class="rf"><div class="rf-label">Employee ID</div><input type="text" class="rf-input" id="hrEmpId" value="${r.employeeId}" placeholder="e.g., EMP-4421"></div>
+          <div class="rf"><div class="rf-label">New BUD (Business Unit Director)</div><input type="text" class="rf-input" id="hrNewBUD" value="${r.newBUD}" placeholder="Enter only if changed"></div>
+          <div class="rf"><div class="rf-label">Labor Category</div><input type="text" class="rf-input" id="hrLaborCat" value="${r.laborCategory}" placeholder="e.g., Systems Analyst II"></div>
+          <div class="rf"><div class="rf-label">Salary Change (HR Confirmed)</div><input type="text" class="rf-input" id="hrSalary" value="${r.salaryChangeHR}" placeholder="Confirm or override manager value"></div>
+          <div class="rf"><div class="rf-label">HR Notes</div><textarea class="rf-textarea" id="hrNotes" placeholder="Internal HR notes — required if declining...">${r.hrNotes}</textarea></div>
+        ` : `
+          ${roField('Employee ID', r.employeeId)}
+          ${roField('New BUD', r.newBUD)}
+          ${roField('Labor Category', r.laborCategory)}
+          ${roField('Salary (HR)', r.salaryChangeHR)}
+          <div class="rf"><div class="rf-label">HR Notes</div><div class="rf-value" style="white-space:pre-wrap;">${r.hrNotes||'—'}</div></div>
+        `}
+        ${r.hrCompletedDate  ? roField('HR Completed Date', fmtDate(r.hrCompletedDate))   : ''}
+        ${r.notificationSentDate ? roField('Notifications Sent', fmtDate(r.notificationSentDate)) : ''}
+        ${r.submittedDate    ? roField('Submitted Date', fmtDate(r.submittedDate))         : ''}
+        ${editable ? `
+          <div class="notif-hint">
+            <strong>On Approve:</strong> Payroll distro and IT distro will receive email notifications with all transfer details.
+            <br><strong>On Decline:</strong> A decline notification will be sent to the submitter only.
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- Actions row -->
+      <div class="review-actions-row">
+        ${editable ? `
+          <span class="review-actions-label">HR Decision:</span>
+          <button class="btn-approve" onclick="hrApprove('${r.id}')">✓ Approve</button>
+          <button class="btn-decline" onclick="hrDecline('${r.id}')">✗ Decline</button>
+          <span class="review-actions-note">HR notes are required when declining.</span>
+        ` : `
+          <span class="review-done-msg">This request is <strong>${r.status}</strong>. No further HR action required.</span>
+        `}
+      </div>
+
+    </div>
+  `;
+}
+
+function hrApprove(id) {
+  const r = getById(id);
+  if (!r || r.status !== 'Submitted') return;
+  // Collect HR overrides of manager fields
+  r.empFirstName        = document.getElementById('rFirstName')?.value        || r.empFirstName;
+  r.empLastName         = document.getElementById('rLastName')?.value         || r.empLastName;
+  r.contractDept        = document.getElementById('rContractDept')?.value     || r.contractDept;
+  r.taskOrder           = document.getElementById('rTaskOrder')?.value        || r.taskOrder;
+  r.newJobTitle         = document.getElementById('rJobTitle')?.value         || r.newJobTitle;
+  r.salaryChangeManager = document.getElementById('rSalaryMgr')?.value        || r.salaryChangeManager;
+  r.managerComments     = document.getElementById('rManagerComments')?.value  || r.managerComments;
+  // HR fields
+  r.employeeId          = document.getElementById('hrEmpId')?.value?.trim()   || '';
+  r.newBUD              = document.getElementById('hrNewBUD')?.value?.trim()  || '';
+  r.laborCategory       = document.getElementById('hrLaborCat')?.value?.trim()|| '';
+  r.salaryChangeHR      = document.getElementById('hrSalary')?.value?.trim()  || '';
+  r.hrNotes             = document.getElementById('hrNotes')?.value?.trim()   || '';
+
+  r.status = 'Completed';
+  r.hrCompletedDate = '2026-05-05';
+  r.notificationSentDate = '2026-05-05';
+
+  showToast(`${r.id} approved. Payroll and IT notification emails sent.`, 'success');
+  showScreen('screen-hr-queue');
+}
+
+function hrDecline(id) {
+  const r = getById(id);
+  if (!r || r.status !== 'Submitted') return;
+  const notes = document.getElementById('hrNotes')?.value?.trim();
+  if (!notes) { showToast('Enter HR notes explaining the reason before declining.', 'error'); return; }
+  r.hrNotes = notes;
+  r.status = 'Declined';
+  showToast(`${r.id} declined. Decline notification sent to submitter.`, 'error');
+  showScreen('screen-hr-queue');
+}
+
+// ════════════════════════════════════════════
+//  ADMIN SCREEN
+// ════════════════════════════════════════════
+function sortAdmin(key) {
+  adminSortDir = (adminSortKey === key && adminSortDir === 'asc') ? 'desc' : 'asc';
+  adminSortKey = key;
+  renderAdmin();
+}
+
+function renderAdmin() {
+  const search    = (document.getElementById('adminSearch')?.value || '').toLowerCase();
+  const sf        = document.getElementById('adminStatusFilter')?.value  || 'all';
+  const ff        = document.getElementById('adminFollowUpFilter')?.value || 'all';
+  const role      = document.getElementById('adminRoleSelect')?.value     || 'HR';
+  const isPayroll = role === 'Payroll';
+
+  let rows = transferRequests.filter(r => {
+    const ms = !search ||
+      (r.empFirstName + ' ' + r.empLastName).toLowerCase().includes(search) ||
+      r.contractDept.toLowerCase().includes(search);
+    const ss = sf === 'all' || r.status === sf;
+    const fs = ff === 'all' || (ff === 'done' && r.followUpComplete) || (ff === 'pending' && !r.followUpComplete);
+    return ms && ss && fs;
+  }).sort((a, b) => {
+    const av = a[adminSortKey] || '', bv = b[adminSortKey] || '';
+    return av < bv ? (adminSortDir === 'asc' ? -1 : 1) : av > bv ? (adminSortDir === 'asc' ? 1 : -1) : 0;
+  });
+
+  const tbody = document.getElementById('adminTbody');
+  if (!tbody) return;
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">No records match your filters.</div></td></tr>`;
+    return;
+  }
+
+  const alloc = r => r.transferType === 'Split Allocation'
+    ? `${r.newContractPct}% new / ${r.hqPct}% HQ` : 'Full-time';
+
+  tbody.innerHTML = rows.map(r => {
+    const open = openAdminRows.has(r.id);
+    const notesBlock = isPayroll ? `
+      <div class="notes-section">
+        <div class="notes-title">Payroll Notes</div>
+        ${r.adminNotes
+          ? `<div class="notes-log">${r.adminNotes}</div>`
+          : `<div class="notes-no-log">No notes yet.</div>`}
+        <textarea class="notes-input" id="note-${r.id}" placeholder="Add a note (timestamped on save)..."></textarea>
+        <br><button class="notes-save" onclick="saveNote('${r.id}')">Save Note</button>
+      </div>
+    ` : `<div class="notes-section"><div class="notes-readonly-msg">Notes are managed by Payroll. Switch role to Payroll to add notes.</div>${r.adminNotes ? `<div style="margin-top:8px;"><div class="notes-title">Payroll Notes</div><div class="notes-log">${r.adminNotes}</div></div>` : ''}</div>`;
+
+    return `
+      <tr onclick="toggleDetail('${r.id}')">
+        <td style="font-weight:600;color:#1e3a5f;">${r.id}</td>
+        <td>${r.empLastName}, ${r.empFirstName}</td>
+        <td>${fmtDate(r.effectiveDate)}</td>
+        <td>${r.contractDept}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td>${fmtDate(r.submittedDate)}</td>
+        <td onclick="event.stopPropagation()">
+          <input type="checkbox" class="fu-toggle" ${r.followUpComplete ? 'checked' : ''}
+            onchange="toggleFollowUp('${r.id}', this.checked)" title="Mark follow-up complete">
+        </td>
+      </tr>
+      <tr class="detail-row ${open ? 'open' : ''}">
+        <td class="detail-cell" colspan="7">
+          <div class="detail-grid">
+            <div><div class="dg-label">New Job Title</div><div class="dg-value">${r.newJobTitle}</div></div>
+            <div><div class="dg-label">Transfer / Alloc</div><div class="dg-value">${r.transferType} · ${alloc(r)}</div></div>
+            <div><div class="dg-label">Task Order</div><div class="dg-value">${r.taskOrder || '—'}</div></div>
+            <div><div class="dg-label">Employee ID</div><div class="dg-value">${r.employeeId || '—'}</div></div>
+            <div><div class="dg-label">Labor Category</div><div class="dg-value">${r.laborCategory || '—'}</div></div>
+            <div><div class="dg-label">Salary (HR)</div><div class="dg-value">${r.salaryChangeHR || '—'}</div></div>
+            <div><div class="dg-label">New BUD</div><div class="dg-value">${r.newBUD || '—'}</div></div>
+            <div><div class="dg-label">Equipment</div><div class="dg-value">${r.nisEquipment ? (r.equipmentDetails || 'Yes') : 'No'}</div></div>
+            <div><div class="dg-label">Submitted By</div><div class="dg-value">${r.submittedBy}</div></div>
+            <div><div class="dg-label">HR Notes</div><div class="dg-value">${r.hrNotes || '—'}</div></div>
+            <div><div class="dg-label">Notif. Sent</div><div class="dg-value">${fmtDate(r.notificationSentDate)}</div></div>
+            <div><div class="dg-label">Manager Comments</div><div class="dg-value">${r.managerComments || '—'}</div></div>
+          </div>
+          ${notesBlock}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function toggleDetail(id) {
+  openAdminRows.has(id) ? openAdminRows.delete(id) : openAdminRows.add(id);
+  renderAdmin();
+}
+
+function toggleFollowUp(id, checked) {
+  const r = getById(id);
+  if (r) r.followUpComplete = checked;
+  showToast(checked ? 'Follow-up marked complete.' : 'Follow-up marked pending.', checked ? 'success' : '');
+}
+
+function saveNote(id) {
+  const r = getById(id);
+  const input = document.getElementById(`note-${id}`);
+  if (!r || !input) return;
+  const text = input.value.trim();
+  if (!text) { showToast('Note is empty.', 'error'); return; }
+  const ts = '[2026-05-05 · payroll@nw-its.com]';
+  r.adminNotes = r.adminNotes ? r.adminNotes + '\n' + ts + ' ' + text : ts + ' ' + text;
+  showToast('Note saved.', 'success');
+  renderAdmin();
+}
+
+// ════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════
+renderQueue();
+</script>
+</body>
+</html>
