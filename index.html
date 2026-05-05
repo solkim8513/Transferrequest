@@ -433,11 +433,17 @@
         </div>
       </div>
       <div class="form-conditional" id="splitConditional">
-        <div class="form-field" style="margin-bottom:0;">
-          <label class="form-label">New Contract Allocation % <span class="required-star">*</span></label>
-          <input type="number" class="form-input" id="fNewContractPct" placeholder="e.g., 30" min="1" max="99" oninput="updateHQCalc(this.value)">
-          <p class="form-hint" id="hqCalcHint">HQ allocation is calculated as the remainder (e.g., enter 30 → new contract 30%, HQ 70%).</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+          <div class="form-field" style="margin-bottom:0;">
+            <label class="form-label">HQ Allocation % <span class="required-star">*</span></label>
+            <input type="number" class="form-input" id="fHQPct" placeholder="e.g., 40" min="0" max="100">
+          </div>
+          <div class="form-field" style="margin-bottom:0;">
+            <label class="form-label">Contract Allocation % <span class="required-star">*</span></label>
+            <input type="number" class="form-input" id="fContractPct" placeholder="e.g., 60" min="0" max="100">
+          </div>
         </div>
+        <p class="form-hint" style="margin-top:10px;">Both values required. Must add up to 100%.</p>
       </div>
     </div>
 
@@ -461,7 +467,11 @@
           <div class="form-check-group">
             <label class="form-check-item"><input type="checkbox" name="equipType" value="Laptop"> Laptop</label>
             <label class="form-check-item"><input type="checkbox" name="equipType" value="Phone"> Phone</label>
-            <label class="form-check-item"><input type="checkbox" name="equipType" value="Other"> Other</label>
+            <label class="form-check-item"><input id="equipOtherCheck" type="checkbox" name="equipType" value="Other" onchange="onEquipOtherChange()"> Other</label>
+          </div>
+          <div class="form-conditional" id="equipOtherConditional" style="margin-top:12px;padding:12px 16px;">
+            <label class="form-label" style="font-size:13px;margin-bottom:6px;">Please specify <span class="required-star">*</span></label>
+            <input type="text" class="form-input" id="fEquipOtherText" placeholder="Describe the equipment needed">
           </div>
         </div>
       </div>
@@ -537,6 +547,7 @@
       <nav class="hr-nav">
         <button class="hr-nav-item active" onclick="showScreen('screen-hr-queue')">Request Queue</button>
         <button class="hr-nav-item" onclick="navTo('screen-admin')">Admin / Request Hub</button>
+        <button class="hr-nav-item" onclick="showScreen('screen-home')" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;padding-top:13px;">← Main Menu</button>
       </nav>
       <div class="hr-sidebar-footer">POC only<br>Static data &middot; Power Apps in production</div>
     </aside>
@@ -596,6 +607,7 @@
       <nav class="hr-nav">
         <button class="hr-nav-item" onclick="showScreen('screen-hr-queue')">Request Queue</button>
         <button class="hr-nav-item" onclick="navTo('screen-admin')">Admin / Request Hub</button>
+        <button class="hr-nav-item" onclick="showScreen('screen-home')" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;padding-top:13px;">← Main Menu</button>
       </nav>
       <div class="hr-sidebar-footer">POC only<br>Static data &middot; Power Apps in production</div>
     </aside>
@@ -672,7 +684,7 @@ const transferRequests = [
     effectiveDate: '2026-06-01',
     contractDept: 'USGS Contract',  taskOrder: 'TO-2024-007',
     newJobTitle: 'Senior Systems Analyst',
-    transferType: 'Split Allocation', newContractPct: 60, hqPct: 40,
+    transferType: 'Split Allocation', contractPct: 60, hqPct: 40,
     nisEquipment: true,  equipmentDetails: 'Laptop, Phone',
     isTeamLead: false, hasDirectReports: false,
     salaryChangeManager: '$95,000',
@@ -809,18 +821,15 @@ function onTransferTypeChange() {
 function onEquipChange() {
   const v = radio('nisEquip');
   document.getElementById('equipConditional').classList.toggle('visible', v === 'Yes');
+  if (v !== 'Yes') {
+    document.getElementById('equipOtherConditional').classList.remove('visible');
+    document.getElementById('equipOtherCheck').checked = false;
+  }
 }
 
-function updateHQCalc(val) {
-  const pct = parseInt(val);
-  const hint = document.getElementById('hqCalcHint');
-  if (pct >= 1 && pct <= 99) {
-    hint.textContent = `New contract: ${pct}% — HQ: ${100 - pct}%`;
-    hint.className = 'form-hint calc';
-  } else {
-    hint.textContent = 'HQ allocation is calculated as the remainder (e.g., enter 30 → new contract 30%, HQ 70%).';
-    hint.className = 'form-hint';
-  }
+function onEquipOtherChange() {
+  const checked = document.getElementById('equipOtherCheck').checked;
+  document.getElementById('equipOtherConditional').classList.toggle('visible', checked);
 }
 
 function submitManagerForm() {
@@ -837,23 +846,29 @@ function submitManagerForm() {
   if (!firstName || !lastName || !effDate || !contractDept || !jobTitle || !transferType || !nisEquip || !teamLead || !directRep) {
     showToast('Please complete all required fields.', 'error'); return;
   }
-  let newContractPct = null, hqPct = null;
+  let contractPct = null, hqPct = null;
   if (transferType === 'Split Allocation') {
-    const pct = parseInt(document.getElementById('fNewContractPct').value);
-    if (!pct || pct < 1 || pct > 99) { showToast('Enter a valid allocation % (1–99).', 'error'); return; }
-    newContractPct = pct; hqPct = 100 - pct;
+    contractPct = parseInt(document.getElementById('fContractPct').value);
+    hqPct       = parseInt(document.getElementById('fHQPct').value);
+    if (isNaN(contractPct) || isNaN(hqPct)) { showToast('Enter both HQ % and Contract % for split allocation.', 'error'); return; }
+    if (contractPct + hqPct !== 100) { showToast(`HQ + Contract must add up to 100% (currently ${contractPct + hqPct}%).`, 'error'); return; }
   }
   if (nisEquip === 'Yes' && !document.querySelector('input[name="equipType"]:checked')) {
     showToast('Please select at least one equipment type.', 'error'); return;
   }
-
-  const equip = [...document.querySelectorAll('input[name="equipType"]:checked')].map(e => e.value).join(', ');
+  let equipParts = [...document.querySelectorAll('input[name="equipType"]:checked')].map(e => e.value);
+  if (equipParts.includes('Other')) {
+    const otherText = document.getElementById('fEquipOtherText')?.value?.trim();
+    if (!otherText) { showToast('Please specify the "Other" equipment.', 'error'); return; }
+    equipParts = equipParts.map(v => v === 'Other' ? `Other: ${otherText}` : v);
+  }
+  const equip = equipParts.join(', ');
   const newId = `TR-00${nextId++}`;
   transferRequests.push({
     id: newId,
     empFirstName: firstName, empLastName: lastName, effectiveDate: effDate,
     contractDept, taskOrder: document.getElementById('fTaskOrder').value.trim(),
-    newJobTitle: jobTitle, transferType, newContractPct, hqPct,
+    newJobTitle: jobTitle, transferType, contractPct, hqPct,
     nisEquipment: nisEquip === 'Yes', equipmentDetails: equip,
     isTeamLead: teamLead === 'Yes', hasDirectReports: directRep === 'Yes',
     salaryChangeManager: document.getElementById('fSalaryManager').value.trim(),
@@ -866,14 +881,13 @@ function submitManagerForm() {
   document.getElementById('newRequestId').textContent = newId;
 
   // Reset form
-  ['fFirstName','fLastName','fEffDate','fContractDept','fTaskOrder','fJobTitle','fNewContractPct','fSalaryManager','fManagerComments']
+  ['fFirstName','fLastName','fEffDate','fContractDept','fTaskOrder','fJobTitle','fHQPct','fContractPct','fEquipOtherText','fSalaryManager','fManagerComments']
     .forEach(id => { document.getElementById(id).value = ''; });
   document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
   document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
   document.getElementById('splitConditional').classList.remove('visible');
   document.getElementById('equipConditional').classList.remove('visible');
-  document.getElementById('hqCalcHint').textContent = 'HQ allocation is calculated as the remainder (e.g., enter 30 → new contract 30%, HQ 70%).';
-  document.getElementById('hqCalcHint').className = 'form-hint';
+  document.getElementById('equipOtherConditional').classList.remove('visible');
 
   showScreen('screen-manager-confirm');
 }
@@ -935,7 +949,7 @@ function renderReview() {
   if (!r) return;
   const editable = r.status === 'Submitted';
   const alloc = r.transferType === 'Split Allocation'
-    ? `${r.newContractPct}% new contract / ${r.hqPct}% HQ`
+    ? `${r.contractPct}% contract / ${r.hqPct}% HQ`
     : 'Full-Time Transfer';
 
   function roField(label, val) {
@@ -1097,7 +1111,7 @@ function renderAdmin() {
   }
 
   const alloc = r => r.transferType === 'Split Allocation'
-    ? `${r.newContractPct}% new / ${r.hqPct}% HQ` : 'Full-time';
+    ? `${r.contractPct}% contract / ${r.hqPct}% HQ` : 'Full-time';
 
   tbody.innerHTML = rows.map(r => {
     const open = openAdminRows.has(r.id);
