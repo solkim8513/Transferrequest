@@ -628,6 +628,7 @@
         <option value="HR">HR</option>
         <option value="Finance">Finance</option>
         <option value="Payroll">Payroll</option>
+        <option value="IT">IT</option>
       </select>
     </div>
   </div>
@@ -713,7 +714,7 @@ const transferRequests = [
     submittedBy: 'linda.chen@nw-its.com', submittedDate: '2026-04-20',
     hrCompletedDate: '2026-04-22', notificationSentDate: '2026-04-22',
     followUpComplete: true,
-    adminNotes: '[2026-04-23 · payroll@nw-its.com] Unanet updated. Effective 5/15 confirmed.\n[2026-04-24 · payroll@nw-its.com] IT confirmed Entra update complete.',
+    adminNotes: '[2026-04-23 · finance@nw-its.com] Unanet updated. Effective 5/15 confirmed.\n[2026-04-24 · finance@nw-its.com] IT confirmed Entra update complete.',
   },
   {
     id: 'TR-003',
@@ -1088,7 +1089,7 @@ function renderAdmin() {
   const sf        = document.getElementById('adminStatusFilter')?.value  || 'all';
   const ff        = document.getElementById('adminFollowUpFilter')?.value || 'all';
   const role      = document.getElementById('adminRoleSelect')?.value     || 'HR';
-  const isPayroll = role === 'Payroll';
+  const isFinance = role === 'Finance';
 
   let rows = transferRequests.filter(r => {
     const ms = !search ||
@@ -1115,16 +1116,18 @@ function renderAdmin() {
 
   tbody.innerHTML = rows.map(r => {
     const open = openAdminRows.has(r.id);
-    const notesBlock = isPayroll ? `
+    const notesBlock = `
       <div class="notes-section">
-        <div class="notes-title">Payroll Notes</div>
+        <div class="notes-title">Notes</div>
         ${r.adminNotes
           ? `<div class="notes-log">${r.adminNotes}</div>`
           : `<div class="notes-no-log">No notes yet.</div>`}
-        <textarea class="notes-input" id="note-${r.id}" placeholder="Add a note (timestamped on save)..."></textarea>
-        <br><button class="notes-save" onclick="saveNote('${r.id}')">Save Note</button>
+        ${isFinance ? `
+          <textarea class="notes-input" id="note-${r.id}" placeholder="Add a note (timestamped on save)..."></textarea>
+          <br><button class="notes-save" onclick="saveNote('${r.id}')">Save Note</button>
+        ` : `<div class="notes-readonly-msg">Notes can be added by Finance only.</div>`}
       </div>
-    ` : `<div class="notes-section"><div class="notes-readonly-msg">Notes are managed by Payroll. Switch role to Payroll to add notes.</div>${r.adminNotes ? `<div style="margin-top:8px;"><div class="notes-title">Payroll Notes</div><div class="notes-log">${r.adminNotes}</div></div>` : ''}</div>`;
+    `;
 
     return `
       <tr onclick="toggleDetail('${r.id}')">
@@ -1179,7 +1182,7 @@ function saveNote(id) {
   if (!r || !input) return;
   const text = input.value.trim();
   if (!text) { showToast('Note is empty.', 'error'); return; }
-  const ts = '[2026-05-05 · payroll@nw-its.com]';
+  const ts = '[2026-05-05 · finance@nw-its.com]';
   r.adminNotes = r.adminNotes ? r.adminNotes + '\n' + ts + ' ' + text : ts + ' ' + text;
   showToast('Note saved.', 'success');
   renderAdmin();
