@@ -463,6 +463,76 @@
       padding: 9px 14px; font-size: 12px; color: #1e3a5f; line-height: 1.6; margin-left: auto;
     }
 
+    /* ══════════════════════════════════════
+       FILTER / EXPORT PANEL
+    ══════════════════════════════════════ */
+    .filter-panel-overlay {
+      display: none; position: fixed; inset: 0; z-index: 500;
+    }
+    .filter-panel-overlay.open { display: block; }
+    .filter-panel {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 370px;
+      background: #f0f2f5; box-shadow: -4px 0 24px rgba(0,0,0,0.18);
+      display: flex; flex-direction: column; z-index: 501; overflow-y: auto;
+    }
+    .fp-header {
+      background: white; padding: 16px 20px; border-bottom: 1px solid #e0e0e0;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .fp-title { font-size: 15px; font-weight: 700; color: #1e3a5f; }
+    .fp-close {
+      background: none; border: none; font-size: 20px; cursor: pointer;
+      color: #888; line-height: 1; padding: 2px 5px; border-radius: 4px; font-family: inherit;
+    }
+    .fp-close:hover { background: #f0f0f0; color: #333; }
+    .fp-body { padding: 20px; flex: 1; }
+    .fp-field { margin-bottom: 18px; }
+    .fp-label { display: block; font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 6px; }
+    .fp-sub-label { display: block; font-size: 12px; color: #555; margin-bottom: 4px; }
+    .fp-input {
+      width: 100%; padding: 10px 12px; border: 1px solid #c8c8c8; border-radius: 4px;
+      font-size: 14px; color: #333; outline: none; font-family: inherit;
+      box-sizing: border-box; background: white;
+    }
+    .fp-input:focus { border-color: #1e3a5f; }
+    .fp-select-wrap { position: relative; }
+    .fp-select {
+      width: 100%; padding: 10px 36px 10px 12px; border: 1px solid #c8c8c8; border-radius: 4px;
+      font-size: 14px; color: #333; outline: none; font-family: inherit;
+      background: white; appearance: none; cursor: pointer;
+    }
+    .fp-select:focus { border-color: #1e3a5f; }
+    .fp-select-arrow {
+      position: absolute; right: 0; top: 0; bottom: 0; width: 36px;
+      background: #1e3a5f; border-radius: 0 4px 4px 0; pointer-events: none;
+      display: flex; align-items: center; justify-content: center; color: white; font-size: 13px;
+    }
+    .fp-date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .fp-reset-btn {
+      display: block; width: 100%; padding: 11px; background: #1e3a5f; color: white;
+      border: none; border-radius: 20px; font-size: 15px; font-weight: 600; cursor: pointer;
+      font-family: inherit; margin-top: 10px;
+    }
+    .fp-reset-btn:hover { background: #162d4a; }
+    .fp-footer {
+      border-top: 1px solid #d0d0d0; padding: 16px 20px; flex-shrink: 0;
+      display: flex; align-items: center; gap: 12px; background: white;
+    }
+    .fp-download-btn {
+      flex: 1; padding: 11px; background: #107c41; color: white;
+      border: none; border-radius: 20px; font-size: 15px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+    }
+    .fp-download-btn:hover { background: #0b5e30; }
+    .fp-info { font-size: 18px; color: #1e3a5f; cursor: default; }
+
+    .filter-export-btn {
+      padding: 8px 18px; background: #1e3a5f; color: white; border: none;
+      border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer;
+      font-family: inherit; display: flex; align-items: center; gap: 6px;
+    }
+    .filter-export-btn:hover { background: #162d4a; }
+
     /* ─── Admin sidebar role selector ─── */
     .admin-sidebar-footer {
       padding: 14px 16px; border-top: 1px solid rgba(255,255,255,0.08);
@@ -531,6 +601,56 @@
 <body>
 
 <div id="toast"></div>
+
+<!-- ── Filter / Export Panel ── -->
+<div id="filterPanelOverlay" class="filter-panel-overlay" onclick="closeFilterPanel()">
+  <div class="filter-panel" onclick="event.stopPropagation()">
+    <div class="fp-header">
+      <span class="fp-title">🔍 Search/Filter By</span>
+      <button class="fp-close" onclick="closeFilterPanel()">✕</button>
+    </div>
+    <div class="fp-body">
+      <div class="fp-field">
+        <label class="fp-label">Employee Name</label>
+        <input type="text" class="fp-input" id="fpEmpName" placeholder="Enter Employee Name" oninput="applyPanelFilters()">
+      </div>
+      <div class="fp-field">
+        <label class="fp-label">Supervisor Name</label>
+        <input type="text" class="fp-input" id="fpSupervisor" placeholder="Enter Supervisor Name" oninput="applyPanelFilters()">
+      </div>
+      <div class="fp-field">
+        <label class="fp-label">Status</label>
+        <div class="fp-select-wrap">
+          <select class="fp-select" id="fpStatus" onchange="applyPanelFilters()">
+            <option value="all"></option>
+            <option value="Submitted">Submitted</option>
+            <option value="Completed">Completed</option>
+            <option value="Declined">Declined</option>
+          </select>
+          <div class="fp-select-arrow">▾</div>
+        </div>
+      </div>
+      <div class="fp-field">
+        <label class="fp-label">Submission Date Range</label>
+        <div class="fp-date-row">
+          <div>
+            <span class="fp-sub-label">Start Date</span>
+            <input type="date" class="fp-input" id="fpStartDate" onchange="applyPanelFilters()">
+          </div>
+          <div>
+            <span class="fp-sub-label">End Date</span>
+            <input type="date" class="fp-input" id="fpEndDate" onchange="applyPanelFilters()">
+          </div>
+        </div>
+      </div>
+      <button class="fp-reset-btn" onclick="resetPanelFilters()">Reset Filters</button>
+    </div>
+    <div class="fp-footer">
+      <span class="fp-info">ⓘ</span>
+      <button class="fp-download-btn" onclick="downloadReport()">Download Report</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── Note Modal ── -->
 <div id="noteModal" class="modal-overlay" onclick="closeNoteModal()">
@@ -847,6 +967,7 @@
     <div class="hr-main">
       <div class="hr-topbar">
         <h1 style="color:#1e3a5f;">Approval Status</h1>
+        <button class="filter-export-btn" onclick="openFilterPanel()">🔍 Filter / Export Data</button>
       </div>
       <div class="hr-content">
         <div class="admin-filters">
@@ -1451,13 +1572,25 @@ function renderAdmin() {
   const role      = document.getElementById('adminRoleSelect')?.value     || 'HR';
   const isFinance = role === 'Finance';
 
+  // Panel filter values (optional — empty means no filter)
+  const fpEmp   = (document.getElementById('fpEmpName')?.value   || '').toLowerCase();
+  const fpSup   = (document.getElementById('fpSupervisor')?.value || '').toLowerCase();
+  const fpSt    = document.getElementById('fpStatus')?.value     || 'all';
+  const fpStart = document.getElementById('fpStartDate')?.value  || '';
+  const fpEnd   = document.getElementById('fpEndDate')?.value    || '';
+
   let rows = transferRequests.filter(r => {
-    const ms = !search ||
-      (r.empFirstName + ' ' + r.empLastName).toLowerCase().includes(search) ||
-      r.contractDept.toLowerCase().includes(search);
+    const empName = (r.empFirstName + ' ' + r.empLastName).toLowerCase();
+    const ms = !search || empName.includes(search) || r.contractDept.toLowerCase().includes(search);
     const ss = sf === 'all' || r.status === sf;
     const fs = ff === 'all' || (ff === 'done' && r.followUpComplete) || (ff === 'pending' && !r.followUpComplete);
-    return ms && ss && fs;
+    // Panel filters
+    const pe = !fpEmp || empName.includes(fpEmp);
+    const ps = !fpSup || (r.submittedBy || '').toLowerCase().includes(fpSup);
+    const pt = fpSt === 'all' || !fpSt || r.status === fpSt;
+    const pd1 = !fpStart || r.submittedDate >= fpStart;
+    const pd2 = !fpEnd   || r.submittedDate <= fpEnd;
+    return ms && ss && fs && pe && ps && pt && pd1 && pd2;
   }).sort((a, b) => {
     const av = a[adminSortKey] || '', bv = b[adminSortKey] || '';
     return av < bv ? (adminSortDir === 'asc' ? -1 : 1) : av > bv ? (adminSortDir === 'asc' ? 1 : -1) : 0;
@@ -1559,6 +1692,34 @@ function saveNote(id) {
   r.adminNotes = r.adminNotes ? r.adminNotes + '\n' + ts + ' ' + text : ts + ' ' + text;
   showToast('Note saved.', 'success');
   renderAdmin();
+}
+
+// ════════════════════════════════════════════
+//  FILTER / EXPORT PANEL
+// ════════════════════════════════════════════
+function openFilterPanel() {
+  document.getElementById('filterPanelOverlay').classList.add('open');
+}
+
+function closeFilterPanel() {
+  document.getElementById('filterPanelOverlay').classList.remove('open');
+}
+
+function applyPanelFilters() {
+  renderAdmin();
+}
+
+function resetPanelFilters() {
+  document.getElementById('fpEmpName').value    = '';
+  document.getElementById('fpSupervisor').value = '';
+  document.getElementById('fpStatus').value     = 'all';
+  document.getElementById('fpStartDate').value  = '';
+  document.getElementById('fpEndDate').value    = '';
+  renderAdmin();
+}
+
+function downloadReport() {
+  showToast('Report download is a placeholder in this POC.', '');
 }
 
 // ════════════════════════════════════════════
