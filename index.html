@@ -166,7 +166,7 @@
       transition: background 0.15s; border-left: 3px solid transparent; font-family: inherit;
     }
     .hr-nav-item:hover  { background: rgba(255,255,255,0.07); color: white; }
-    .hr-nav-item.active { background: rgba(255,255,255,0.11); color: white; border-left-color: #4fc3f7; }
+    .hr-nav-item.active { background: rgba(61,124,201,0.18); color: white; border-left-color: #3d7cc9; }
     .hr-sidebar-footer { padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 11px; opacity: 0.4; line-height: 1.5; }
 
     .hr-main { flex: 1; overflow-y: auto; background: #f0f2f5; display: flex; flex-direction: column; }
@@ -195,11 +195,11 @@
     .queue-table-wrap { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; }
     .data-table { width: 100%; border-collapse: collapse; }
     .data-table th {
-      background: #f8f9fa; padding: 11px 16px; text-align: left;
-      font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase;
-      letter-spacing: 0.5px; border-bottom: 2px solid #e8e8e8; cursor: pointer; user-select: none;
+      background: #1e3a5f; padding: 11px 16px; text-align: left;
+      font-size: 11px; font-weight: 700; color: #fff; text-transform: uppercase;
+      letter-spacing: 0.5px; border-bottom: 2px solid #16304f; cursor: pointer; user-select: none;
     }
-    .data-table th:hover { background: #f0f2f5; }
+    .data-table th:hover { background: #16304f; }
     .data-table td { padding: 13px 16px; font-size: 14px; border-bottom: 1px solid #f2f2f2; }
     .data-table tr:last-child td { border-bottom: none; }
     .data-table tbody tr { cursor: pointer; transition: background 0.1s; }
@@ -339,6 +339,141 @@
     .notes-save:hover { background: #162d4a; }
     .notes-payroll-only { /* shown only when role=Payroll */ }
     .notes-readonly-msg { font-size: 12px; color: #bbb; }
+
+    /* ══════════════════════════════════════
+       NIS BRAND HEADER (full-width topbar)
+    ══════════════════════════════════════ */
+    .nis-header {
+      background: #1e3a5f; color: white; padding: 12px 24px; flex-shrink: 0;
+      display: flex; align-items: center; gap: 20px;
+    }
+    .nis-logo { display: flex; align-items: center; gap: 10px; }
+    .nis-logo-mark {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.35);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 800; letter-spacing: 0.5px; flex-shrink: 0;
+    }
+    .nis-logo-text strong { display: block; font-size: 14px; font-weight: 700; line-height: 1.2; }
+    .nis-logo-text span   { font-size: 11px; opacity: 0.65; }
+    .nis-page-title { flex: 1; text-align: right; font-size: 22px; font-weight: 700; }
+    .nis-title-gold  { color: #f0a500; }
+    .nis-title-white { color: #ffffff; }
+
+    /* ── Screens with NIS header use flex column ── */
+    #screen-hr-queue.active,
+    #screen-hr-review.active,
+    #screen-admin.active { display: flex; flex-direction: column; }
+    /* hr-app fills remaining height */
+    #screen-hr-queue .hr-app,
+    #screen-hr-review .hr-app,
+    #screen-admin .hr-app { flex: 1; min-height: 0; }
+
+    /* ─── ID box in table ─── */
+    .id-box {
+      display: inline-block; border: 1.5px solid #b0c4d8; border-radius: 4px;
+      padding: 3px 10px; font-size: 13px; font-weight: 600; color: #1e3a5f;
+      min-width: 44px; text-align: center; background: white;
+    }
+
+    /* ══════════════════════════════════════
+       POWER APPS REVIEW LAYOUT
+    ══════════════════════════════════════ */
+    .pa-review-layout {
+      display: flex; align-items: flex-start; flex: 1; min-height: 0;
+    }
+    .pa-review-main {
+      flex: 1; overflow-y: auto; padding: 24px; min-width: 0; height: 100%;
+    }
+    .pa-approval-panel {
+      width: 260px; flex-shrink: 0; background: white;
+      border-left: 1px solid #e0e0e0; position: sticky; top: 0; align-self: flex-start;
+    }
+    .pa-panel-header {
+      background: #1e3a5f; color: white; padding: 13px 18px;
+      font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .pa-panel-id { font-size: 20px; font-weight: 700; color: #f0a500; letter-spacing: 0; text-transform: none; }
+    .pa-panel-row {
+      padding: 11px 18px; border-bottom: 1px solid #f0f0f0;
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .pa-panel-label { font-size: 11px; color: #3d7cc9; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+    .pa-panel-value { font-size: 13px; color: #1a1a2e; font-weight: 500; }
+    .pa-panel-sub   { font-size: 12px; color: #888; }
+    .pa-panel-status-approved { color: #2e7d32; font-weight: 600; }
+    .pa-panel-status-declined { color: #c62828; font-weight: 600; }
+
+    .pa-back-row { margin-bottom: 18px; }
+    .pa-back-btn {
+      background: none; border: none; padding: 0; font-family: inherit;
+      color: #1e3a5f; font-size: 14px; font-weight: 500; cursor: pointer;
+    }
+    .pa-back-btn:hover { text-decoration: underline; }
+
+    .pa-info-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      background: white; border-radius: 4px; margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden;
+    }
+    .pa-info-cell { padding: 16px 20px; border-right: 1px solid #f0f0f0; }
+    .pa-info-cell:last-child { border-right: none; }
+    .pa-info-label { font-size: 12px; color: #3d7cc9; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .pa-info-value { font-size: 15px; color: #1a1a2e; font-weight: 500; }
+
+    .pa-section {
+      background: white; border-radius: 4px; margin-bottom: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden;
+    }
+    .pa-section-title {
+      font-size: 12px; font-weight: 700; color: #1e3a5f;
+      padding: 11px 20px; border-bottom: 2px solid #e3f2fd;
+      text-transform: uppercase; letter-spacing: 0.6px;
+    }
+    .pa-fields-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+    .pa-field {
+      padding: 13px 20px; border-right: 1px solid #f5f5f5; border-bottom: 1px solid #f5f5f5;
+    }
+    .pa-field:last-child { border-right: none; }
+    .pa-field.full  { grid-column: 1 / -1; }
+    .pa-field.span2 { grid-column: span 2; }
+    .pa-field-label { font-size: 11px; color: #3d7cc9; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .pa-field-value { font-size: 13px; color: #1a1a2e; }
+    .pa-input {
+      width: 100%; padding: 7px 10px; border: 1px solid #d0d0d0; border-radius: 3px;
+      font-size: 13px; font-family: inherit; outline: none; box-sizing: border-box; margin-top: 4px;
+    }
+    .pa-input:focus { border-color: #1e3a5f; }
+    .pa-textarea {
+      width: 100%; padding: 9px 10px; border: 1px solid #d0d0d0; border-radius: 3px;
+      font-size: 13px; font-family: inherit; resize: vertical; min-height: 72px;
+      outline: none; box-sizing: border-box; margin-top: 4px;
+    }
+    .pa-textarea:focus { border-color: #1e3a5f; }
+
+    .pa-action-row {
+      background: white; border-radius: 4px; padding: 18px 20px; margin-top: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    }
+    .pa-action-label { font-size: 14px; color: #555; font-weight: 500; }
+    .pa-done-msg { font-size: 14px; color: #777; }
+    .pa-notif-hint {
+      background: #f0f7ff; border: 1px solid #b3d4f5; border-radius: 4px;
+      padding: 9px 14px; font-size: 12px; color: #1e3a5f; line-height: 1.6; margin-left: auto;
+    }
+
+    /* ─── Admin sidebar role selector ─── */
+    .admin-sidebar-footer {
+      padding: 14px 16px; border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .admin-role-sidebar-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 5px; }
+    .admin-role-sidebar-select {
+      width: 100%; padding: 6px 10px; border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.1);
+      color: white; font-size: 13px; cursor: pointer; outline: none; font-family: inherit;
+    }
+    .admin-role-sidebar-select option { background: #1e3a5f; color: white; }
 
     /* ─── Note icon button ─── */
     .note-btn {
@@ -600,23 +735,28 @@
      SCREEN 4 — HR QUEUE
 ══════════════════════════════════════════ -->
 <div id="screen-hr-queue" class="screen">
+  <div class="nis-header">
+    <div class="nis-logo">
+      <div class="nis-logo-mark">NIS</div>
+      <div class="nis-logo-text">
+        <strong>NIS</strong>
+        <span>Nationwide IT Services</span>
+      </div>
+    </div>
+    <div class="nis-page-title nis-title-gold">My Action Required</div>
+  </div>
   <div class="hr-app">
     <aside class="hr-sidebar">
-      <div class="hr-brand">
-        <div class="hr-brand-eyebrow">NIS</div>
-        <div class="hr-brand-name">HR Portal</div>
-        <div class="hr-brand-sub">Transfer Requests</div>
-      </div>
-      <nav class="hr-nav">
-        <button class="hr-nav-item active" onclick="showScreen('screen-hr-queue')">Request Queue</button>
-        <button class="hr-nav-item" onclick="navTo('screen-admin')">Admin / Request Hub</button>
+      <nav class="hr-nav" style="padding-top:16px;">
+        <button class="hr-nav-item active" onclick="showScreen('screen-hr-queue'); renderQueue()">🔔 My Action Required</button>
+        <button class="hr-nav-item" onclick="navTo('screen-admin')">📋 View All Data</button>
         <button class="hr-nav-item" onclick="showScreen('screen-home')" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;padding-top:13px;">← Main Menu</button>
       </nav>
-      <div class="hr-sidebar-footer">POC only<br>Static data &middot; Power Apps in production</div>
+      <div class="hr-sidebar-footer">POC only &middot; Power Apps in production</div>
     </aside>
     <div class="hr-main">
       <div class="hr-topbar">
-        <h1>Transfer Request Queue</h1>
+        <h1 style="color:#1e3a5f;">My Action Required</h1>
         <span style="font-size:13px;color:#888;" id="queueCount"></span>
       </div>
       <div class="hr-content">
@@ -637,17 +777,7 @@
         </div>
         <div class="queue-table-wrap">
           <table class="data-table" id="queueTable">
-            <thead>
-              <tr>
-                <th onclick="sortQueue('id')">ID</th>
-                <th onclick="sortQueue('empLastName')">Employee</th>
-                <th onclick="sortQueue('effectiveDate')">Effective Date</th>
-                <th onclick="sortQueue('contractDept')">Contract / Dept</th>
-                <th onclick="sortQueue('status')">Status</th>
-                <th onclick="sortQueue('submittedDate')">Submitted</th>
-                <th></th>
-              </tr>
-            </thead>
+            <thead id="queueThead"></thead>
             <tbody id="queueTbody"></tbody>
           </table>
         </div>
@@ -660,78 +790,91 @@
      SCREEN 5 — HR REVIEW
 ══════════════════════════════════════════ -->
 <div id="screen-hr-review" class="screen">
+  <div class="nis-header">
+    <div class="nis-logo">
+      <div class="nis-logo-mark">NIS</div>
+      <div class="nis-logo-text">
+        <strong>NIS</strong>
+        <span>Nationwide IT Services</span>
+      </div>
+    </div>
+    <div class="nis-page-title nis-title-white" id="reviewNisTitle">Transfer Request — HR Review</div>
+  </div>
   <div class="hr-app">
     <aside class="hr-sidebar">
-      <div class="hr-brand">
-        <div class="hr-brand-eyebrow">NIS</div>
-        <div class="hr-brand-name">HR Portal</div>
-        <div class="hr-brand-sub">Transfer Requests</div>
-      </div>
-      <nav class="hr-nav">
-        <button class="hr-nav-item" onclick="showScreen('screen-hr-queue')">Request Queue</button>
-        <button class="hr-nav-item" onclick="navTo('screen-admin')">Admin / Request Hub</button>
+      <nav class="hr-nav" style="padding-top:16px;">
+        <button class="hr-nav-item" onclick="showScreen('screen-hr-queue'); renderQueue()">🔔 My Action Required</button>
+        <button class="hr-nav-item" onclick="navTo('screen-admin')">📋 View All Data</button>
         <button class="hr-nav-item" onclick="showScreen('screen-home')" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;padding-top:13px;">← Main Menu</button>
       </nav>
-      <div class="hr-sidebar-footer">POC only<br>Static data &middot; Power Apps in production</div>
+      <div class="hr-sidebar-footer">POC only &middot; Power Apps in production</div>
     </aside>
-    <div class="hr-main" id="hrReviewMain"></div>
+    <div class="hr-main" id="hrReviewMain" style="overflow-y:auto;"></div>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════
-     SCREEN 6 — ADMIN / REQUEST HUB
+     SCREEN 6 — VIEW ALL DATA
 ══════════════════════════════════════════ -->
 <div id="screen-admin" class="screen">
-  <div class="admin-topbar">
-    <span class="admin-back" onclick="goBack()">← Back</span>
-    <span class="admin-title">Request Hub &mdash; Admin Screen</span>
-    <div class="admin-role-wrap">
-      <span class="admin-role-label">Viewing as:</span>
-      <select class="admin-role-select" id="adminRoleSelect" onchange="renderAdmin()">
-        <option value="HR">HR</option>
-        <option value="Finance">Finance</option>
-        <option value="Payroll">Payroll</option>
-        <option value="IT">IT</option>
-      </select>
-    </div>
-  </div>
-  <div class="admin-body">
-    <div class="admin-content">
-      <div class="admin-filters">
-        <input type="text" class="admin-search" id="adminSearch" placeholder="Search employee name or contract..." oninput="renderAdmin()">
-        <div class="filter-group">
-          <label>Status</label>
-          <select class="filter-select" id="adminStatusFilter" onchange="renderAdmin()">
-            <option value="all">All statuses</option>
-            <option value="Submitted">Submitted</option>
-            <option value="Completed">Completed</option>
-            <option value="Declined">Declined</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>Follow-Up</label>
-          <select class="filter-select" id="adminFollowUpFilter" onchange="renderAdmin()">
-            <option value="all">All</option>
-            <option value="pending">Pending</option>
-            <option value="done">Complete</option>
-          </select>
-        </div>
+  <div class="nis-header">
+    <div class="nis-logo">
+      <div class="nis-logo-mark">NIS</div>
+      <div class="nis-logo-text">
+        <strong>NIS</strong>
+        <span>Nationwide IT Services</span>
       </div>
-      <div class="admin-table-wrap">
-        <table class="data-table admin-table" id="adminTable">
-          <thead>
-            <tr>
-              <th onclick="sortAdmin('id')">ID</th>
-              <th onclick="sortAdmin('empLastName')">Employee</th>
-              <th onclick="sortAdmin('effectiveDate')">Effective Date</th>
-              <th onclick="sortAdmin('contractDept')">Contract / Dept</th>
-              <th onclick="sortAdmin('status')">Status</th>
-              <th onclick="sortAdmin('submittedDate')">Submitted</th>
-              <th>Follow-Up</th>
-            </tr>
-          </thead>
-          <tbody id="adminTbody"></tbody>
-        </table>
+    </div>
+    <div class="nis-page-title nis-title-white">View All Data</div>
+  </div>
+  <div class="hr-app">
+    <aside class="hr-sidebar">
+      <nav class="hr-nav" style="padding-top:16px;">
+        <button class="hr-nav-item" onclick="showScreen('screen-hr-queue'); renderQueue()">🔔 My Action Required</button>
+        <button class="hr-nav-item active" onclick="navTo('screen-admin')">📋 View All Data</button>
+        <button class="hr-nav-item" onclick="showScreen('screen-home')" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;padding-top:13px;">← Main Menu</button>
+      </nav>
+      <div class="admin-sidebar-footer">
+        <div class="admin-role-sidebar-label">Viewing as:</div>
+        <select class="admin-role-sidebar-select" id="adminRoleSelect" onchange="renderAdmin()">
+          <option value="HR">HR</option>
+          <option value="Finance">Finance</option>
+          <option value="Payroll">Payroll</option>
+          <option value="IT">IT</option>
+        </select>
+      </div>
+    </aside>
+    <div class="hr-main">
+      <div class="hr-topbar">
+        <h1 style="color:#1e3a5f;">View All Data</h1>
+      </div>
+      <div class="hr-content">
+        <div class="admin-filters">
+          <input type="text" class="admin-search" id="adminSearch" placeholder="Search employee name or contract..." oninput="renderAdmin()">
+          <div class="filter-group">
+            <label>Status</label>
+            <select class="filter-select" id="adminStatusFilter" onchange="renderAdmin()">
+              <option value="all">All statuses</option>
+              <option value="Submitted">Submitted</option>
+              <option value="Completed">Completed</option>
+              <option value="Declined">Declined</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Follow-Up</label>
+            <select class="filter-select" id="adminFollowUpFilter" onchange="renderAdmin()">
+              <option value="all">All</option>
+              <option value="pending">Pending</option>
+              <option value="done">Complete</option>
+            </select>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="data-table admin-table" id="adminTable">
+            <thead id="adminThead"></thead>
+            <tbody id="adminTbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -966,6 +1109,10 @@ function sortQueue(key) {
   renderQueue();
 }
 
+function sortArrow(col, key, dir) {
+  return col === key ? (dir === 'asc' ? ' ▲' : ' ▼') : '';
+}
+
 function renderQueue() {
   const search = (document.getElementById('queueSearch')?.value || '').toLowerCase();
   const sf     = document.getElementById('queueStatusFilter')?.value || 'all';
@@ -982,6 +1129,17 @@ function renderQueue() {
   const el = document.getElementById('queueCount');
   if (el) el.textContent = `${rows.length} record${rows.length !== 1 ? 's' : ''}`;
 
+  const thead = document.getElementById('queueThead');
+  if (thead) thead.innerHTML = `<tr>
+    <th onclick="sortQueue('id')">Employee Name${sortArrow('empLastName', queueSortKey, queueSortDir)}</th>
+    <th onclick="sortQueue('submittedDate')">Submission Date${sortArrow('submittedDate', queueSortKey, queueSortDir)}</th>
+    <th onclick="sortQueue('contractDept')">Contract / Dept${sortArrow('contractDept', queueSortKey, queueSortDir)}</th>
+    <th onclick="sortQueue('status')">Status${sortArrow('status', queueSortKey, queueSortDir)}</th>
+    <th onclick="sortQueue('effectiveDate')">Effective Date${sortArrow('effectiveDate', queueSortKey, queueSortDir)}</th>
+    <th>ID</th>
+    <th></th>
+  </tr>`;
+
   const tbody = document.getElementById('queueTbody');
   if (!tbody) return;
 
@@ -989,12 +1147,12 @@ function renderQueue() {
     ? `<tr><td colspan="7"><div class="empty-state">No requests match your filters.</div></td></tr>`
     : rows.map(r => `
       <tr onclick="openReview('${r.id}')">
-        <td style="font-weight:600;color:#1e3a5f;">${r.id}</td>
-        <td>${r.empLastName}, ${r.empFirstName}</td>
-        <td>${fmtDate(r.effectiveDate)}</td>
+        <td style="font-weight:600;">${r.empLastName}, ${r.empFirstName}</td>
+        <td>${fmtDate(r.submittedDate)}</td>
         <td>${r.contractDept}</td>
         <td>${statusBadge(r.status)}</td>
-        <td>${fmtDate(r.submittedDate)}</td>
+        <td>${fmtDate(r.effectiveDate)}</td>
+        <td><span class="id-box">${r.id.replace('TR-','')}</span></td>
         <td class="action-link">${r.status === 'Submitted' ? 'Review →' : 'View →'}</td>
       </tr>`).join('');
 }
@@ -1015,90 +1173,228 @@ function renderReview() {
   const editable = r.status === 'Submitted';
   const alloc = r.transferType === 'Split Allocation'
     ? `${r.contractPct}% contract / ${r.hqPct}% HQ`
-    : 'Full-Time Transfer';
+    : 'Full-time';
 
-  function roField(label, val) {
-    return `<div class="rf"><div class="rf-label">${label}</div><div class="rf-value">${val || '—'}</div></div>`;
-  }
-  function rwField(label, val, inputId, placeholder) {
-    return editable
-      ? `<div class="rf"><div class="rf-label">${label}</div><input type="text" class="rf-input" id="${inputId}" value="${(val||'').replace(/"/g,'&quot;')}" placeholder="${placeholder||''}"></div>`
-      : roField(label, val);
-  }
-  function rwTextarea(label, val, inputId, placeholder) {
-    return editable
-      ? `<div class="rf"><div class="rf-label">${label}</div><textarea class="rf-textarea" id="${inputId}" placeholder="${placeholder||''}">${val||''}</textarea></div>`
-      : `<div class="rf"><div class="rf-label">${label}</div><div class="rf-value" style="white-space:pre-wrap;">${val||'—'}</div></div>`;
-  }
+  // Update NIS header title
+  const nisTitle = document.getElementById('reviewNisTitle');
+  if (nisTitle) nisTitle.textContent = `Transfer Request — ${r.id}`;
+
+  function ro(val) { return val || '—'; }
+
+  // Approval panel status display
+  const hrStatus = r.status === 'Completed'
+    ? `<span class="pa-panel-status-approved">✓ Approved</span>`
+    : r.status === 'Declined'
+    ? `<span class="pa-panel-status-declined">✗ Declined</span>`
+    : '—';
 
   const main = document.getElementById('hrReviewMain');
   main.innerHTML = `
-    <div class="review-topbar">
-      <span class="review-back" onclick="showScreen('screen-hr-queue')">← Back to Queue</span>
-      <span class="review-title">${r.id} — ${r.empLastName}, ${r.empFirstName}</span>
-      <span class="review-status">${statusBadge(r.status)}</span>
+    <div style="padding:16px 24px 0; flex-shrink:0;">
+      <button class="pa-back-btn" onclick="showScreen('screen-hr-queue'); renderQueue()">← Back to My Action Required</button>
     </div>
-    <div class="review-body">
 
-      <!-- Left panel: Manager submission -->
-      <div class="review-panel">
-        <div class="review-panel-title">Manager Submission<span class="panel-note">${editable ? 'HR may override any field' : 'read-only'}</span></div>
-        ${rwField('Employee First Name', r.empFirstName, 'rFirstName')}
-        ${rwField('Employee Last Name',  r.empLastName,  'rLastName')}
-        ${roField('Effective Date',      fmtDate(r.effectiveDate))}
-        ${rwField('Contract / Department', r.contractDept, 'rContractDept')}
-        ${rwField('Task Order', r.taskOrder, 'rTaskOrder', 'N/A if none')}
-        ${rwField('New Job Title', r.newJobTitle, 'rJobTitle')}
-        ${roField('Transfer Type', r.transferType)}
-        ${roField('Allocation', alloc)}
-        ${roField('NIS Equipment', r.nisEquipment ? 'Yes' : 'No')}
-        ${r.nisEquipment ? roField('Equipment Details', r.equipmentDetails) : ''}
-        ${roField('Team Lead', r.isTeamLead ? 'Yes' : 'No')}
-        ${roField('Direct Reports', r.hasDirectReports ? 'Yes' : 'No')}
-        ${rwField('Salary (Manager)', r.salaryChangeManager, 'rSalaryMgr', 'enter if known')}
-        ${rwTextarea('Manager Comments', r.managerComments, 'rManagerComments')}
-      </div>
+    <div class="pa-review-layout">
 
-      <!-- Right panel: HR fields -->
-      <div class="review-panel">
-        <div class="review-panel-title">HR Review</div>
-        ${editable ? `
-          <div class="rf"><div class="rf-label">Employee ID</div><input type="text" class="rf-input" id="hrEmpId" value="${r.employeeId}" placeholder="e.g., EMP-4421"></div>
-          <div class="rf"><div class="rf-label">New BUD (Business Unit Director)</div><input type="text" class="rf-input" id="hrNewBUD" value="${r.newBUD}" placeholder="Enter only if changed"></div>
-          <div class="rf"><div class="rf-label">Labor Category</div><input type="text" class="rf-input" id="hrLaborCat" value="${r.laborCategory}" placeholder="e.g., Systems Analyst II"></div>
-          <div class="rf"><div class="rf-label">Salary Change (HR Confirmed)</div><input type="text" class="rf-input" id="hrSalary" value="${r.salaryChangeHR}" placeholder="Confirm or override manager value"></div>
-          <div class="rf"><div class="rf-label">HR Notes</div><textarea class="rf-textarea" id="hrNotes" placeholder="Internal HR notes — required if declining...">${r.hrNotes}</textarea></div>
-        ` : `
-          ${roField('Employee ID', r.employeeId)}
-          ${roField('New BUD', r.newBUD)}
-          ${roField('Labor Category', r.laborCategory)}
-          ${roField('Salary (HR)', r.salaryChangeHR)}
-          <div class="rf"><div class="rf-label">HR Notes</div><div class="rf-value" style="white-space:pre-wrap;">${r.hrNotes||'—'}</div></div>
-        `}
-        ${r.hrCompletedDate  ? roField('HR Completed Date', fmtDate(r.hrCompletedDate))   : ''}
-        ${r.notificationSentDate ? roField('Notifications Sent', fmtDate(r.notificationSentDate)) : ''}
-        ${r.submittedDate    ? roField('Submitted Date', fmtDate(r.submittedDate))         : ''}
-        ${editable ? `
-          <div class="notif-hint">
-            <strong>On Approve:</strong> Payroll distro and IT distro will receive email notifications with all transfer details.
-            <br><strong>On Decline:</strong> A decline notification will be sent to the submitter only.
+      <!-- ── Left: scrollable main content ── -->
+      <div class="pa-review-main">
+
+        <!-- Top info grid -->
+        <div class="pa-info-grid">
+          <div class="pa-info-cell">
+            <div class="pa-info-label">Employee</div>
+            <div class="pa-info-value">${r.empFirstName} ${r.empLastName}</div>
           </div>
-        ` : ''}
-      </div>
+          <div class="pa-info-cell">
+            <div class="pa-info-label">Manager</div>
+            <div class="pa-info-value">${ro(r.submittedBy.split('@')[0].replace('.', ' ').replace(/\b\w/g, c => c.toUpperCase()))}</div>
+          </div>
+          <div class="pa-info-cell">
+            <div class="pa-info-label">Contract / Dept</div>
+            <div class="pa-info-value">${ro(r.contractDept)}</div>
+          </div>
+          <div class="pa-info-cell">
+            <div class="pa-info-label">Submission Date</div>
+            <div class="pa-info-value">${fmtDate(r.submittedDate)}</div>
+          </div>
+        </div>
 
-      <!-- Actions row -->
-      <div class="review-actions-row">
+        <!-- Transfer Details -->
+        <div class="pa-section">
+          <div class="pa-section-title">Transfer Details</div>
+          <div class="pa-fields-grid">
+            <div class="pa-field">
+              <div class="pa-field-label">New Job Title</div>
+              ${editable
+                ? `<input class="pa-input" id="rJobTitle" value="${(r.newJobTitle||'').replace(/"/g,'&quot;')}">`
+                : `<div class="pa-field-value">${ro(r.newJobTitle)}</div>`}
+            </div>
+            <div class="pa-field">
+              <div class="pa-field-label">Transfer / Alloc</div>
+              <div class="pa-field-value">${ro(r.transferType)} · ${alloc}</div>
+            </div>
+            <div class="pa-field">
+              <div class="pa-field-label">Task Order</div>
+              ${editable
+                ? `<input class="pa-input" id="rTaskOrder" value="${(r.taskOrder||'').replace(/"/g,'&quot;')}" placeholder="N/A if none">`
+                : `<div class="pa-field-value">${ro(r.taskOrder)}</div>`}
+            </div>
+            <div class="pa-field">
+              <div class="pa-field-label">Effective Date</div>
+              <div class="pa-field-value">${fmtDate(r.effectiveDate)}</div>
+            </div>
+            <div class="pa-field">
+              <div class="pa-field-label">NIS Equipment</div>
+              <div class="pa-field-value">${r.nisEquipment ? ro(r.equipmentDetails) : 'No'}</div>
+            </div>
+            <div class="pa-field">
+              <div class="pa-field-label">Team Lead / Direct Reports</div>
+              <div class="pa-field-value">${r.isTeamLead ? 'Team Lead' : '—'} · ${r.hasDirectReports ? 'Has Reports' : 'No Reports'}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Compensation -->
+        <div class="pa-section">
+          <div class="pa-section-title">Compensation</div>
+          <div class="pa-fields-grid">
+            <div class="pa-field">
+              <div class="pa-field-label">Salary (Manager)</div>
+              ${editable
+                ? `<input class="pa-input" id="rSalaryMgr" value="${(r.salaryChangeManager||'').replace(/"/g,'&quot;')}" placeholder="enter if known">`
+                : `<div class="pa-field-value">${ro(r.salaryChangeManager)}</div>`}
+            </div>
+            <div class="pa-field">
+              <div class="pa-field-label">Salary (HR Confirmed)</div>
+              ${editable
+                ? `<input class="pa-input" id="hrSalary" value="${(r.salaryChangeHR||'').replace(/"/g,'&quot;')}" placeholder="Confirm or override">`
+                : `<div class="pa-field-value">${ro(r.salaryChangeHR)}</div>`}
+            </div>
+            <div class="pa-field">
+              <div class="pa-field-label">Labor Category</div>
+              ${editable
+                ? `<input class="pa-input" id="hrLaborCat" value="${(r.laborCategory||'').replace(/"/g,'&quot;')}" placeholder="e.g., Systems Analyst II">`
+                : `<div class="pa-field-value">${ro(r.laborCategory)}</div>`}
+            </div>
+          </div>
+        </div>
+
+        <!-- Manager Comments -->
+        <div class="pa-section">
+          <div class="pa-section-title">Manager Comments</div>
+          <div class="pa-fields-grid">
+            <div class="pa-field full">
+              ${editable
+                ? `<textarea class="pa-textarea" id="rManagerComments" placeholder="Manager's comments...">${r.managerComments||''}</textarea>`
+                : `<div class="pa-field-value" style="white-space:pre-wrap;">${ro(r.managerComments)}</div>`}
+            </div>
+          </div>
+        </div>
+
         ${editable ? `
-          <span class="review-actions-label">HR Decision:</span>
-          <button class="btn-approve" onclick="hrApprove('${r.id}')">✓ Approve</button>
-          <button class="btn-decline" onclick="hrDecline('${r.id}')">✗ Decline</button>
-          <span class="review-actions-note">HR notes are required when declining.</span>
+        <!-- HR Review Fields (editable) -->
+        <div class="pa-section">
+          <div class="pa-section-title">HR Review Fields</div>
+          <div class="pa-fields-grid">
+            <div class="pa-field">
+              <div class="pa-field-label">Employee ID</div>
+              <input class="pa-input" id="hrEmpId" value="${r.employeeId}" placeholder="e.g., EMP-4421">
+            </div>
+            <div class="pa-field">
+              <div class="pa-field-label">New BUD</div>
+              <input class="pa-input" id="hrNewBUD" value="${r.newBUD}" placeholder="Enter only if changed">
+            </div>
+            <div class="pa-field">
+              <div class="pa-field-label">Employee First Name Override</div>
+              <input class="pa-input" id="rFirstName" value="${(r.empFirstName||'').replace(/"/g,'&quot;')}">
+            </div>
+            <div class="pa-field">
+              <div class="pa-field-label">Employee Last Name Override</div>
+              <input class="pa-input" id="rLastName" value="${(r.empLastName||'').replace(/"/g,'&quot;')}">
+            </div>
+            <div class="pa-field">
+              <div class="pa-field-label">Contract / Dept Override</div>
+              <input class="pa-input" id="rContractDept" value="${(r.contractDept||'').replace(/"/g,'&quot;')}">
+            </div>
+            <div class="pa-field" style="border-right:none;"></div>
+            <div class="pa-field full">
+              <div class="pa-field-label">HR Notes <span style="color:#c62828;">(required if declining)</span></div>
+              <textarea class="pa-textarea" id="hrNotes" placeholder="Internal HR notes...">${r.hrNotes||''}</textarea>
+            </div>
+          </div>
+        </div>
         ` : `
-          <span class="review-done-msg">This request is <strong>${r.status}</strong>. No further HR action required.</span>
+        <!-- HR Review Fields (read-only) -->
+        <div class="pa-section">
+          <div class="pa-section-title">HR Review Fields</div>
+          <div class="pa-fields-grid">
+            <div class="pa-field">
+              <div class="pa-field-label">Employee ID</div>
+              <div class="pa-field-value">${ro(r.employeeId)}</div>
+            </div>
+            <div class="pa-field">
+              <div class="pa-field-label">New BUD</div>
+              <div class="pa-field-value">${ro(r.newBUD)}</div>
+            </div>
+            <div class="pa-field">
+              <div class="pa-field-label">HR Completed</div>
+              <div class="pa-field-value">${fmtDate(r.hrCompletedDate)}</div>
+            </div>
+            <div class="pa-field full">
+              <div class="pa-field-label">HR Notes</div>
+              <div class="pa-field-value" style="white-space:pre-wrap;">${ro(r.hrNotes)}</div>
+            </div>
+          </div>
+        </div>
         `}
-      </div>
 
-    </div>
+        <!-- Action Row -->
+        <div class="pa-action-row">
+          ${editable ? `
+            <span class="pa-action-label">HR Decision:</span>
+            <button class="btn-approve" onclick="hrApprove('${r.id}')">✓ Approve</button>
+            <button class="btn-decline" onclick="hrDecline('${r.id}')">✗ Decline</button>
+            <div class="pa-notif-hint">
+              <strong>Approve:</strong> Payroll &amp; IT receive email notifications.<br>
+              <strong>Decline:</strong> Submitter receives decline notice.
+            </div>
+          ` : `
+            <span class="pa-done-msg">This request is <strong>${r.status}</strong>. No further HR action required.</span>
+          `}
+        </div>
+
+      </div><!-- /pa-review-main -->
+
+      <!-- ── Right: Approval Details panel ── -->
+      <div class="pa-approval-panel">
+        <div class="pa-panel-header">
+          <span>Approval Details</span>
+          <span class="pa-panel-id">${r.id}</span>
+        </div>
+        <div class="pa-panel-row">
+          <span class="pa-panel-label">Submitter</span>
+          <span class="pa-panel-value">${r.empFirstName} ${r.empLastName}</span>
+          <span class="pa-panel-sub">${fmtDate(r.submittedDate)}</span>
+        </div>
+        <div class="pa-panel-row">
+          <span class="pa-panel-label">Manager</span>
+          <span class="pa-panel-value">${r.submittedBy}</span>
+        </div>
+        <div class="pa-panel-row">
+          <span class="pa-panel-label">BUD</span>
+          <span class="pa-panel-value">${ro(r.newBUD)}</span>
+        </div>
+        <div class="pa-panel-row">
+          <span class="pa-panel-label">HR</span>
+          <span class="pa-panel-value">${hrStatus}</span>
+        </div>
+        <div class="pa-panel-row">
+          <span class="pa-panel-label">Payroll</span>
+          <span class="pa-panel-value">—</span>
+        </div>
+      </div><!-- /pa-approval-panel -->
+
+    </div><!-- /pa-review-layout -->
   `;
 }
 
@@ -1167,6 +1463,17 @@ function renderAdmin() {
     return av < bv ? (adminSortDir === 'asc' ? -1 : 1) : av > bv ? (adminSortDir === 'asc' ? 1 : -1) : 0;
   });
 
+  const thead = document.getElementById('adminThead');
+  if (thead) thead.innerHTML = `<tr>
+    <th onclick="sortAdmin('id')">ID${sortArrow('id', adminSortKey, adminSortDir)}</th>
+    <th onclick="sortAdmin('empLastName')">Employee${sortArrow('empLastName', adminSortKey, adminSortDir)}</th>
+    <th onclick="sortAdmin('effectiveDate')">Effective Date${sortArrow('effectiveDate', adminSortKey, adminSortDir)}</th>
+    <th onclick="sortAdmin('contractDept')">Contract / Dept${sortArrow('contractDept', adminSortKey, adminSortDir)}</th>
+    <th onclick="sortAdmin('status')">Status${sortArrow('status', adminSortKey, adminSortDir)}</th>
+    <th onclick="sortAdmin('submittedDate')">Submitted${sortArrow('submittedDate', adminSortKey, adminSortDir)}</th>
+    <th>Follow-Up</th>
+  </tr>`;
+
   const tbody = document.getElementById('adminTbody');
   if (!tbody) return;
 
@@ -1195,7 +1502,7 @@ function renderAdmin() {
 
     return `
       <tr onclick="toggleDetail('${r.id}')">
-        <td style="font-weight:600;color:#1e3a5f;">${r.id}</td>
+        <td><span class="id-box">${r.id}</span></td>
         <td>${r.empLastName}, ${r.empFirstName}</td>
         <td>${fmtDate(r.effectiveDate)}</td>
         <td>${r.contractDept}</td>
